@@ -10,9 +10,9 @@
   <style>
     :root {
       --bg-dark: #050811;
-      --card-bg: rgba(13, 20, 36, 0.78);
-      --card-border: rgba(56, 189, 248, 0.22);
-      --card-border-glow: rgba(56, 189, 248, 0.45);
+      --card-bg: #0b1222;
+      --card-border: rgba(56, 189, 248, 0.26);
+      --card-border-glow: rgba(56, 189, 248, 0.55);
       --accent-cyan: #00f0ff;
       --accent-green: #10b981;
       --accent-red: #ff2a5f;
@@ -32,8 +32,8 @@
     body {
       background: var(--bg-dark);
       background-image: 
-        radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.09) 0%, transparent 45%),
-        radial-gradient(circle at 85% 85%, rgba(176, 38, 255, 0.09) 0%, transparent 45%),
+        radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(176, 38, 255, 0.08) 0%, transparent 45%),
         linear-gradient(180deg, #050811 0%, #0a0f1d 100%);
       color: var(--text-main);
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -56,14 +56,13 @@
       gap: 12px;
     }
 
-    /* Top Command Header */
+    /* Top Command Header (Opaque solid cyber surface for zero capture flicker) */
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
       background: var(--card-bg);
-      backdrop-filter: blur(16px);
       border: 1px solid var(--card-border);
       border-radius: 14px;
       padding: 10px 20px;
@@ -166,8 +165,8 @@
     .threat-critical { background: rgba(255, 42, 95, 0.22); border: 1px solid rgba(255, 42, 95, 0.6); color: var(--accent-red); animation: pulseGlow 1s infinite alternate; }
 
     @keyframes pulseGlow {
-      0% { box-shadow: 0 0 5px rgba(255, 42, 95, 0.3); opacity: 0.85; }
-      100% { box-shadow: 0 0 18px rgba(255, 42, 95, 0.7); opacity: 1; }
+      0% { box-shadow: 0 0 5px rgba(255, 42, 95, 0.3); }
+      100% { box-shadow: 0 0 18px rgba(255, 42, 95, 0.7); }
     }
 
     /* Controls Bar */
@@ -177,7 +176,6 @@
       justify-content: space-between;
       flex-wrap: wrap;
       background: var(--card-bg);
-      backdrop-filter: blur(14px);
       border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 8px 16px;
@@ -313,7 +311,6 @@
     /* Canvas Card */
     .canvas-card {
       background: var(--card-bg);
-      backdrop-filter: blur(14px);
       border: 1px solid var(--card-border);
       border-radius: 14px;
       padding: 14px;
@@ -348,7 +345,7 @@
       position: absolute;
       top: 8px;
       left: 10px;
-      background: rgba(2, 6, 23, 0.8);
+      background: rgba(2, 6, 23, 0.9);
       border: 1px solid rgba(0, 240, 255, 0.4);
       padding: 3px 8px;
       border-radius: 6px;
@@ -357,7 +354,6 @@
       font-weight: 700;
       color: var(--accent-cyan);
       pointer-events: none;
-      backdrop-filter: blur(4px);
     }
 
     .canvas-overlay-invincible {
@@ -417,7 +413,6 @@
 
     .card {
       background: var(--card-bg);
-      backdrop-filter: blur(14px);
       border: 1px solid var(--card-border);
       border-radius: 14px;
       padding: 14px;
@@ -585,16 +580,16 @@
       text-decoration: underline;
     }
 
-    /* Screen shake */
-    .shake {
-      animation: screenShake 0.28s cubic-bezier(.36,.07,.19,.97) both;
+    /* Localized Canvas Shake (Will never shake browser window or glitch video capture) */
+    .canvas-wrap.shake {
+      animation: canvasShake 0.25s ease-in-out both;
     }
 
-    @keyframes screenShake {
-      10%, 90% { transform: translate3d(-3px, 0, 0); }
-      20%, 80% { transform: translate3d(4px, 0, 0); }
-      30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
-      40%, 60% { transform: translate3d(5px, 0, 0); }
+    @keyframes canvasShake {
+      10%, 90% { transform: translate(-3px, 0); }
+      20%, 80% { transform: translate(3px, 0); }
+      30%, 50%, 70% { transform: translate(-4px, 0); }
+      40%, 60% { transform: translate(4px, 0); }
     }
   </style>
 </head>
@@ -923,7 +918,7 @@
        ========================================================================= */
     const SERVER_URL = "http://localhost:8080";
     const CANVAS = document.getElementById("game-canvas");
-    const CTX = CANVAS.getContext("2d");
+    const CTX = CANVAS.getContext("2d", { alpha: false, desynchronized: false });
 
     let gameMode = 'battle'; // 'battle' or 'classic'
 
@@ -1637,8 +1632,7 @@
                 addFloatingText("💥 SHIELD BREACH! -1 HP", snake[0].x, snake[0].y, "#ff2a5f");
                 spawnParticles(e.x, e.y, "#ff2a5f", 20);
 
-                document.getElementById("main-container").classList.add("shake");
-                setTimeout(() => document.getElementById("main-container").classList.remove("shake"), 300);
+                triggerCanvasShake();
 
                 // Destroy enemy on collision
                 enemies.splice(i, 1);
@@ -1756,7 +1750,6 @@
       }
 
       updateHUD();
-      render();
     }
 
     function gameOver() {
@@ -2105,6 +2098,21 @@
         currentDir = "right";
       }
     });
+
+    function triggerCanvasShake() {
+      const wrap = document.querySelector(".canvas-wrap");
+      if (wrap) {
+        wrap.classList.add("shake");
+        setTimeout(() => wrap.classList.remove("shake"), 260);
+      }
+    }
+
+    // Dedicated 60 FPS Render Loop (Synchronized with browser display VSync for rock-solid screen recording)
+    function animLoop() {
+      render();
+      requestAnimationFrame(animLoop);
+    }
+    requestAnimationFrame(animLoop);
 
     // Boot
     resetGame();
