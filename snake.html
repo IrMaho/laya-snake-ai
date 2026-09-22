@@ -591,6 +591,56 @@
       30%, 50%, 70% { transform: translate(-4px, 0); }
       40%, 60% { transform: translate(4px, 0); }
     }
+
+    /* Modal Overlay (Victory / Sector Clear) */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(2, 6, 23, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      border-radius: 12px;
+      animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-card {
+      background: #0b1222;
+      border: 2px solid var(--accent-green);
+      box-shadow: 0 0 35px rgba(16, 185, 129, 0.45);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .btn-rec {
+      background: linear-gradient(135deg, #e11d48, #be123c);
+      border-color: #fb7185;
+      color: #fff;
+    }
+    .btn-rec.recording {
+      background: #ff2a5f;
+      animation: pulseRecord 1s infinite alternate;
+    }
+    @keyframes pulseRecord {
+      0% { box-shadow: 0 0 6px rgba(255, 42, 95, 0.4); }
+      100% { box-shadow: 0 0 18px rgba(255, 42, 95, 0.85); }
+    }
   </style>
 </head>
 <body>
@@ -626,7 +676,7 @@
         <!-- Warp Mana -->
         <div class="hud-item" title="Quantum Dimension Shift Capacitor">
           <span class="hud-label">WARP:</span>
-          <span class="hud-val" id="hud-mana" style="color:var(--accent-purple);">100%</span>
+          <span class="hud-val" id="hud-mana" style="color:var(--accent-purple);">100% (5/5)</span>
         </div>
 
         <!-- Threat Level -->
@@ -634,10 +684,10 @@
           <span>●</span> <span id="threat-text">SECURE RECON</span>
         </div>
 
-        <!-- Score -->
-        <div class="hud-item" title="Total Tactical Score">
-          <span class="hud-label">SCORE:</span>
-          <span class="hud-val" id="hud-score" style="color:var(--accent-green);">0</span>
+        <!-- Score / Sector Target -->
+        <div class="hud-item" title="Current Score vs Sector Target">
+          <span class="hud-label">TARGET:</span>
+          <span class="hud-val" id="hud-score" style="color:var(--accent-green);">0 / 2000</span>
         </div>
       </div>
     </header>
@@ -659,12 +709,16 @@
           💥 Fire Laser (Space)
         </button>
 
-        <button class="btn btn-warp" id="btn-warp" onclick="triggerManualWarp()" title="Expand Grid 1 Column Left (E)">
-          🌀 Quantum Warp (E)
+        <button class="btn btn-warp" id="btn-warp" onclick="triggerManualWarp()" title="Expand Grid 1 Column Left (E) [Max 5]">
+          🌀 Warp (5/5 Left)
         </button>
 
         <button class="btn btn-sound" id="btn-sound" onclick="toggleSound()" title="Toggle Web Audio Synthesizer">
           🔊 SFX: ON
+        </button>
+
+        <button class="btn btn-rec" id="btn-rec" onclick="toggleRecording()" title="Record high-fps clean video without screen capture flicker">
+          🎥 Rec (60fps)
         </button>
 
         <select id="speed-select" onchange="changeSpeed(this.value)">
@@ -685,6 +739,26 @@
           <canvas id="game-canvas" width="420" height="420"></canvas>
           <div class="canvas-overlay-banner" id="grid-dim-text">SECTOR: 12 × 12</div>
           <div class="canvas-overlay-invincible" id="invincible-banner">🛡️ FORCE FIELD ACTIVE</div>
+
+          <!-- Victory Modal Dialog -->
+          <div id="victory-overlay" class="modal-overlay" style="display:none;">
+            <div class="modal-card">
+              <div style="font-size:38px;">🏆</div>
+              <div style="font-family:'Orbitron',sans-serif; font-size:16px; font-weight:800; color:var(--accent-green); text-shadow:0 0 14px rgba(16,185,129,0.5);">
+                SECTOR CLEARED!
+              </div>
+              <div style="font-size:11px; color:var(--text-muted); line-height:1.5;">
+                Neural Commander Laya successfully dominated the sector and fulfilled the target quota!
+              </div>
+              <div id="victory-stats-text" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent-cyan); background:rgba(2,6,23,0.85); padding:8px 14px; border-radius:6px; border:1px solid rgba(0,240,255,0.3);">
+                Score: 2000 | Warps: 3/5
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-primary" onclick="nextSector()">▶ Next Sector</button>
+                <button class="btn" onclick="resetGame()">↺ Replay</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Dimension Expansion Controls -->
@@ -903,6 +977,24 @@
         gain.connect(this.ctx.destination);
         osc.start();
         osc.stop(this.ctx.currentTime + 0.22);
+      },
+      playVictory() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.1);
+          gain.gain.setValueAtTime(0.25, this.ctx.currentTime + idx * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.1 + 0.25);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(this.ctx.currentTime + idx * 0.1);
+          osc.stop(this.ctx.currentTime + idx * 0.1 + 0.25);
+        });
       }
     };
 
@@ -970,6 +1062,10 @@
       ammo: 3,
       mana: 100, // 0 to 100%
       score: 0,
+      warpCount: 0,
+      maxWarps: 5,
+      victoryScore: 2000,
+      isVictory: false,
       invincibleTimer: 0, // i-frames
       freezeTimer: 0      // EMP freeze timer
     };
@@ -1004,6 +1100,9 @@
       stats.ammo = 3;
       stats.mana = 100;
       stats.score = 0;
+      stats.warpCount = 0;
+      stats.maxWarps = 5;
+      stats.isVictory = false;
       stats.invincibleTimer = 0;
       stats.freezeTimer = 0;
 
@@ -1023,8 +1122,8 @@
 
       document.getElementById("grid-dim-text").textContent = `SECTOR: ${getGridCols()} × ${getGridRows()}`;
       document.getElementById("invincible-banner").style.display = "none";
+      document.getElementById("victory-overlay").style.display = "none";
       updateHUD();
-      render();
     }
 
     function switchMode(mode) {
@@ -1101,9 +1200,15 @@
     }
 
     /* =========================================================================
-       DIMENSION QUANTUM WARP (Grid Expansion)
+       DIMENSION QUANTUM WARP (Grid Expansion - Max 5 Warps)
        ========================================================================= */
     function expandGrid(side) {
+      if (stats.warpCount >= stats.maxWarps) {
+        addFloatingText(`WARP LIMIT REACHED (${stats.maxWarps}/${stats.maxWarps})`, snake[0].x, snake[0].y, "#ff2a5f");
+        return;
+      }
+      stats.warpCount++;
+
       if (side === 'left') grid.minX -= 1;
       else if (side === 'right') grid.maxX += 1;
       else if (side === 'up') grid.minY -= 1;
@@ -1113,15 +1218,19 @@
       stats.score += 50;
 
       AudioSys.playWarp();
-      addFloatingText(`🌀 WARP +1 ${side.toUpperCase()}!`, snake[0].x, snake[0].y, "#b026ff");
+      const left = stats.maxWarps - stats.warpCount;
+      addFloatingText(`🌀 WARP +1 ${side.toUpperCase()}! (${left} left)`, snake[0].x, snake[0].y, "#b026ff");
       spawnParticles(snake[0].x, snake[0].y, "#b026ff", 22);
 
       document.getElementById("grid-dim-text").textContent = `SECTOR: ${getGridCols()} × ${getGridRows()}`;
       updateHUD();
-      render();
     }
 
     function triggerManualWarp() {
+      if (stats.warpCount >= stats.maxWarps) {
+        addFloatingText(`WARP MAXED (${stats.maxWarps}/${stats.maxWarps})`, snake[0].x, snake[0].y, "#ff2a5f");
+        return;
+      }
       if (stats.mana >= 50) {
         // Expand side closest to head
         const head = snake[0];
@@ -1398,7 +1507,9 @@
           closest_enemy: closestEnemy,
           enemy_in_line_of_sight: enemyInLOS,
           los_direction: losDir,
-          can_expand_grid: (stats.mana >= 50 && (head.x === grid.minX || head.x === grid.maxX || head.y === grid.minY || head.y === grid.maxY)),
+          can_expand_grid: (stats.warpCount < stats.maxWarps && stats.mana >= 50 && (head.x === grid.minX || head.x === grid.maxX || head.y === grid.minY || head.y === grid.maxY)),
+          warp_count: stats.warpCount,
+          max_warps: stats.maxWarps,
           recommended_expand_side: "left",
           items: {
             has_heart: !!items.heart,
@@ -1438,7 +1549,7 @@
 
           if (act === "shoot" && enemyInLOS && stats.ammo > 0) {
             fireWeapon(losDir);
-          } else if (act === "cast_grid_expansion" && stats.mana >= 50) {
+          } else if (act === "cast_grid_expansion" && stats.warpCount < stats.maxWarps && stats.mana >= 50) {
             // Determine side to warp
             if (head.x === grid.minX) expandGrid("left");
             else if (head.x === grid.maxX) expandGrid("right");
@@ -1657,9 +1768,9 @@
       const vec = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[currentDir];
       const newHead = { x: snake[0].x + vec[0], y: snake[0].y + vec[1] };
 
-      // Perimeter crash guard: Auto-Warp or Shield Bounce
+      // Perimeter crash guard: Auto-Warp (if warps left) or Shield Bounce
       if (!isValid(newHead.x, newHead.y)) {
-        if (stats.mana >= 50) {
+        if (stats.mana >= 50 && stats.warpCount < stats.maxWarps) {
           // Emergency Quantum Warp Save!
           const side = (newHead.x < grid.minX) ? 'left' : (newHead.x > grid.maxX) ? 'right' : (newHead.y < grid.minY) ? 'up' : 'down';
           expandGrid(side);
@@ -1668,7 +1779,9 @@
           stats.hp -= 1;
           stats.invincibleTimer = 20;
           AudioSys.playHit();
-          addFloatingText("⚡ PERIMETER DEFLECTOR! -1 HP", snake[0].x, snake[0].y, "#f59e0b");
+          triggerCanvasShake();
+          const reasonText = (stats.warpCount >= stats.maxWarps) ? "⚡ PERIMETER DEFLECTOR! (WARP MAXED)" : "⚡ PERIMETER DEFLECTOR! -1 HP";
+          addFloatingText(reasonText, snake[0].x, snake[0].y, "#f59e0b");
           spawnParticles(snake[0].x, snake[0].y, "#f59e0b", 16);
           updateHUD();
 
@@ -1749,6 +1862,12 @@
         stats.mana = Math.min(100, stats.mana + 1);
       }
 
+      // Sector Victory Condition: Stop endless game loop!
+      if (stats.score >= stats.victoryScore && !stats.isVictory) {
+        victory();
+        return;
+      }
+
       updateHUD();
     }
 
@@ -1767,14 +1886,27 @@
       const heartsStr = "❤️".repeat(Math.max(0, stats.hp)) + "🖤".repeat(Math.max(0, stats.maxHp - stats.hp));
       document.getElementById("hud-hearts").textContent = heartsStr;
 
-      // Ammo & Mana & Score
+      // Ammo & Mana & Score & Warps
       document.getElementById("hud-ammo").textContent = `⚡ ${stats.ammo}`;
-      document.getElementById("hud-mana").textContent = `${stats.mana}%`;
-      document.getElementById("hud-score").textContent = stats.score;
+      const warpsLeft = Math.max(0, stats.maxWarps - stats.warpCount);
+      document.getElementById("hud-mana").textContent = `${stats.mana}% (${warpsLeft}/5)`;
+      document.getElementById("hud-score").textContent = `${stats.score} / ${stats.victoryScore}`;
 
       // Buttons
       document.getElementById("btn-shoot").disabled = (stats.ammo <= 0);
-      document.getElementById("btn-warp").disabled = (stats.mana < 50);
+      const warpBtn = document.getElementById("btn-warp");
+      if (stats.warpCount >= stats.maxWarps) {
+        warpBtn.disabled = true;
+        warpBtn.textContent = `🌀 Warp Maxed (0/5)`;
+      } else {
+        warpBtn.disabled = (stats.mana < 50);
+        warpBtn.textContent = `🌀 Warp (${warpsLeft}/5 Left)`;
+      }
+
+      // Mini Warp Buttons
+      document.querySelectorAll(".mini-btn").forEach(b => {
+        b.disabled = (stats.warpCount >= stats.maxWarps);
+      });
     }
 
     /* =========================================================================
@@ -1825,9 +1957,7 @@
       const rows = getGridRows();
       const cellSize = CANVAS.width / Math.max(cols, rows);
 
-      CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
-
-      // 1. Digital Cyber Canvas Background
+      // 1. Digital Cyber Canvas Background (Solid fill, zero clearRect flicker)
       const bgGrad = CTX.createRadialGradient(
         CANVAS.width / 2, CANVAS.height / 2, 20,
         CANVAS.width / 2, CANVAS.height / 2, CANVAS.width * 0.75
@@ -2104,6 +2234,100 @@
       if (wrap) {
         wrap.classList.add("shake");
         setTimeout(() => wrap.classList.remove("shake"), 260);
+      }
+    }
+
+    /* =========================================================================
+       VICTORY MODAL & SECTOR ADVANCEMENT
+       ========================================================================= */
+    function victory() {
+      isRunning = false;
+      stats.isVictory = true;
+      AudioSys.playVictory();
+      const btn = document.getElementById("btn-start");
+      btn.textContent = "🏆 Victory! Next Sector";
+      btn.classList.add("btn-primary");
+      btn.style.background = "#10b981";
+
+      addFloatingText("🏆 SECTOR CLEARED! VICTORY!", snake[0].x, snake[0].y, "#10b981");
+      spawnParticles(snake[0].x, snake[0].y, "#10b981", 35);
+      spawnParticles(snake[0].x, snake[0].y, "#00f0ff", 35);
+
+      document.getElementById("victory-overlay").style.display = "flex";
+      document.getElementById("victory-stats-text").textContent = 
+        `Score: ${stats.score} | Warps Used: ${stats.warpCount}/${stats.maxWarps} | Remaining HP: ${stats.hp}/${stats.maxHp}`;
+    }
+
+    function nextSector() {
+      document.getElementById("victory-overlay").style.display = "none";
+      stats.victoryScore += 1500;
+      stats.warpCount = 0; // Fresh 5 warps for new sector
+      stats.hp = stats.maxHp;
+      stats.ammo = Math.max(3, stats.ammo + 2);
+      stats.mana = 100;
+      stats.isVictory = false;
+      spawnEnemy();
+      spawnEnemy();
+      toggleGame();
+    }
+
+    /* =========================================================================
+       BUILT-IN 60 FPS SCREEN / CANVAS RECORDER (Zero External Tool Flicker!)
+       ========================================================================= */
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isRecording = false;
+
+    function toggleRecording() {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    function startRecording() {
+      try {
+        const stream = CANVAS.captureStream(60); // 60 FPS clean stream
+        let options = { mimeType: 'video/webm;codecs=vp9' };
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+          options = { mimeType: 'video/webm' };
+        }
+        mediaRecorder = new MediaRecorder(stream, options);
+        recordedChunks = [];
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `laya_cyber_snake_${Date.now()}.webm`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          addFloatingText("💾 VIDEO DOWNLOADED!", snake[0].x, snake[0].y, "#10b981");
+        };
+        mediaRecorder.start();
+        isRecording = true;
+        const btn = document.getElementById("btn-rec");
+        btn.textContent = "⏹ Stop Rec";
+        btn.classList.add("recording");
+        addFloatingText("🔴 RECORDING (60 FPS)", snake[0].x, snake[0].y, "#ff2a5f");
+      } catch (err) {
+        alert("Recording error: " + err.message);
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        const btn = document.getElementById("btn-rec");
+        btn.textContent = "🎥 Rec (60fps)";
+        btn.classList.remove("recording");
       }
     }
 

@@ -94,6 +94,8 @@ async def system_one(payload: SystemOneRequest):
             items = state.get("items", {})
             closest_enemy = state.get("closest_enemy")
             can_expand = state.get("can_expand_grid", False)
+            warp_count = state.get("warp_count", 0)
+            max_warps = state.get("max_warps", 5)
             enemy_in_los = state.get("enemy_in_line_of_sight", False)
             los_dir = state.get("los_direction", "none")
             priority_target = state.get("priority_target", "food")
@@ -133,6 +135,7 @@ async def system_one(payload: SystemOneRequest):
                     "head": head,
                     "hp": f"{hp}/{max_hp}",
                     "ammo": ammo,
+                    "warps_used": f"{warp_count}/{max_warps}",
                     "enemies_count": len(enemies),
                     "nearest_enemy": f"at {closest_enemy['pos']} dist {closest_enemy['dist']}" if closest_enemy else "none",
                     "line_of_sight": f"enemy in {los_dir}" if enemy_in_los else "clear",
@@ -165,11 +168,13 @@ async def system_one(payload: SystemOneRequest):
                     else:
                         tc["evade_and_heal"] = "[LOW] Not in immediate danger, no urgent need to evade"
 
-                    # GRID EXPANSION
-                    if can_expand:
-                        tc["cast_grid_expansion"] = "[PRIORITY-1] QUANTUM WARP READY! Boundary wall is directly adjacent. Expand grid boundary immediately to escape corner trap and open new terrain!"
+                    # GRID EXPANSION (Strict max 5 warps)
+                    if warp_count >= max_warps:
+                        tc["cast_grid_expansion"] = f"[EXHAUSTED/PROHIBITED] Quantum warp capacity depleted ({warp_count}/{max_warps} used). No more expansions allowed."
+                    elif can_expand:
+                        tc["cast_grid_expansion"] = f"[PRIORITY-1] QUANTUM WARP READY ({max_warps - warp_count} uses left)! Boundary wall is directly adjacent. Expand grid boundary immediately to escape corner trap!"
                     else:
-                        tc["cast_grid_expansion"] = "[LOW/LOCKED] Quantum warp drive charging or not touching perimeter wall."
+                        tc["cast_grid_expansion"] = f"[LOW/LOCKED] Quantum warp drive charging or not touching perimeter wall ({max_warps - warp_count} uses left)."
 
                     # GATHER AMMO
                     if ammo == 0 and items.get("has_ammo"):
