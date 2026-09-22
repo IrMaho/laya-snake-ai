@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.mp4
+node_modules/
+package-lock.json
+.env
+.venv
+env/
+venv/
+*.log
+scratch/
+.DS_Store
+Thumbs.db

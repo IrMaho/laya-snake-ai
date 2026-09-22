@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>laya / snake</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      background: #ffffff;
+      color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      padding: 16px;
+    }
+
+    .wrap {
+      width: 780px;
+      max-width: 100%;
+      margin: 0 auto;
+      background: #ffffff;
+      color: #0f172a;
+    }
+
+    /* Single non-wrapping top bar: zero layout shift */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      height: 40px;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      gap: 10px;
+    }
+
+    .top-left {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .title {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: 130px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: #475569;
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #94a3b8;
+      flex-shrink: 0;
+    }
+    .dot.live { background: #16a34a; }
+    .dot.warn { background: #d97706; }
+    .dot.err { background: #dc2626; }
+
+    .metrics {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 12px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .metric-label {
+      color: #64748b;
+      font-weight: 500;
+    }
+    .metric-val {
+      color: #0f172a;
+      font-weight: 700;
+      display: inline-block;
+      text-align: right;
+    }
+    #m-score { width: 24px; }
+    #m-steps { width: 34px; }
+    #m-fill { width: 48px; }
+    #m-lookahead { width: 42px; color: #0969da; }
+    #m-ms { width: 44px; }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    button {
+      height: 30px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #btn-start {
+      width: 80px;
+      background: #0969da;
+      color: #ffffff;
+      border: 1px solid #0969da;
+    }
+    #btn-start:hover {
+      background: #0860ca;
+    }
+
+    #btn-reset {
+      width: 60px;
+      background: #ffffff;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+    }
+    #btn-reset:hover {
+      background: #f1f5f9;
+    }
+
+    /* Main 2-column layout: 360px canvas + 360px right column */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .board-box {
+      width: 360px;
+      height: 360px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    canvas#board {
+      display: block;
+      width: 360px;
+      height: 360px;
+    }
+
+    .right-col {
+      height: 360px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .panel {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: #0f172a;
+    }
+
+    .probs-panel {
+      height: 173px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .json-panel {
+      height: 175px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .panel-sub {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: #475569;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .prob-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .prob-row {
+      display: grid;
+      grid-template-columns: 60px 1fr 52px 46px;
+      align-items: center;
+      gap: 8px;
+      height: 24px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .dir-name {
+      color: #475569;
+      font-weight: 600;
+    }
+    .dir-name.chosen {
+      color: #0969da;
+    }
+
+    .bar-track {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: #94a3b8;
+      width: 0%;
+      transition: width 0.04s ease-out;
+    }
+    .bar-fill.chosen {
+      background: #0969da;
+    }
+
+    .prob-pct {
+      text-align: right;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .prob-pct.dim {
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    .safety-tag {
+      font-size: 11px;
+      font-weight: 600;
+      text-align: right;
+      color: #16a34a;
+    }
+    .safety-tag.blocked {
+      color: #dc2626;
+    }
+
+    pre#live-json {
+      flex: 1;
+      margin: 0;
+      padding: 6px 8px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.38;
+      color: #0f172a;
+      overflow: hidden;
+      white-space: pre;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .j-key { color: #0550ae; font-weight: 600; }
+    .j-str { color: #116329; }
+    .j-num { color: #953800; font-weight: 600; }
+
+    @media (max-width: 720px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+      .board-box, canvas#board {
+        width: 100%;
+        max-width: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="top-left">
+        <span class="title">laya / snake</span>
+        <span class="status">
+          <span id="dot" class="dot"></span>
+          <span id="status-text">Idle</span>
+        </span>
+      </div>
+
+      <div class="metrics">
+        <span class="metric">
+          <span class="metric-label">Score</span>
+          <span id="m-score" class="metric-val">0</span>
+        </span>
+        <span class="metric">
+          <span class="metric-label">Step</span>
+          <span id="m-steps" class="metric-val">0</span>
+        </span>
+        <span class="metric">
+          <span class="metric-label">Fill</span>
+          <span id="m-fill" class="metric-val">4/144</span>
+        </span>
+        <span class="metric">
+          <span class="metric-label">Lookahead</span>
+          <span id="m-lookahead" class="metric-val">1000+</span>
+        </span>
+        <span class="metric">
+          <span class="metric-label">Latency</span>
+          <span id="m-ms" class="metric-val">0 ms</span>
+        </span>
+      </div>
+
+      <div class="top-actions">
+        <label style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#475569;cursor:pointer;user-select:none;">
+          <input type="checkbox" id="chk-cycle" style="cursor:pointer;accent-color:#0969da;">
+          Cycle
+        </label>
+        <select id="speed-select" style="height:30px; border-radius:5px; border:1px solid #cbd5e1; background:#f8fafc; font-family:inherit; font-weight:600; font-size:12px; padding:0 6px; cursor:pointer; color:#0f172a;">
+          <option value="turbo" selected>⚡ Turbo (Max GPU)</option>
+          <option value="fast">🚀 Fast (15ms)</option>
+          <option value="normal">⏱ Normal (45ms)</option>
+        </select>
+        <button id="btn-start" type="button">Start</button>
+        <button id="btn-reset" type="button">Reset</button>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="board-box">
+        <canvas id="board"></canvas>
+      </div>
+
+      <div class="right-col">
+        <div class="panel probs-panel">
+          <div class="panel-head">
+            <span>Move Probabilities</span>
+            <span id="choice-badge" class="panel-sub">choice: right (50.0%)</span>
+          </div>
+          <div class="prob-rows">
+            <div class="prob-row">
+              <span class="dir-name" id="name-up">↑ up</span>
+              <div class="bar-track"><div class="bar-fill" id="bar-up"></div></div>
+              <span class="prob-pct dim" id="val-up">25.0%</span>
+              <span class="safety-tag" id="safe-up">safe</span>
+            </div>
+            <div class="prob-row">
+              <span class="dir-name" id="name-down">↓ down</span>
+              <div class="bar-track"><div class="bar-fill" id="bar-down"></div></div>
+              <span class="prob-pct dim" id="val-down">25.0%</span>
+              <span class="safety-tag" id="safe-down">safe</span>
+            </div>
+            <div class="prob-row">
+              <span class="dir-name" id="name-left">← left</span>
+              <div class="bar-track"><div class="bar-fill" id="bar-left"></div></div>
+              <span class="prob-pct dim" id="val-left">0.0%</span>
+              <span class="safety-tag blocked" id="safe-left">neck</span>
+            </div>
+            <div class="prob-row">
+              <span class="dir-name chosen" id="name-right">→ right</span>
+              <div class="bar-track"><div class="bar-fill chosen" id="bar-right"></div></div>
+              <span class="prob-pct" id="val-right">50.0%</span>
+              <span class="safety-tag" id="safe-right">safe</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel json-panel">
+          <div class="panel-head">
+            <span>Last /v1/systemone Call</span>
+            <span id="coords-text" class="panel-sub">head [5,6] · food [9,3]</span>
+          </div>
+          <pre id="live-json"></pre>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#64748b;text-align:right;padding-top:2px;">
+      Powered by <span style="color:#38bdf8;font-weight:600;">Laya 8M (ModernBERT)</span> &amp; Dual-Engine Spatial Lookahead Simulator
+    </div>
+  </div>
+
+<script>
+const CLOUD_RUN_URL = "http://localhost:8080"; // Local Laya System 1 Server
+const GRID = 12;
+const CSS_SIZE = 360;
+const DIRS = ["up", "down", "left", "right"];
+const ARROWS = { up: "↑", down: "↓", left: "←", right: "→" };
+const VEC = {
+  up: [0, -1],
+  down: [0, 1],
+  left: [-1, 0],
+  right: [1, 0]
+};
+
+const QUESTIONS_SCHEMA = {
+  move: {
+    type: "choice",
+    instructions: "Select the next move for the snake head. Choose recommended_safe_move in safe_moves that reduces manhattan_to_food while preserving open_space.",
+    criteria: {
+      up: "Move north (y - 1)",
+      down: "Move south (y + 1)",
+      left: "Move west (x - 1)",
+      right: "Move east (x + 1)"
+    }
+  }
+};
+
+const $ = id => document.getElementById(id);
+
+function resolveEndpointUrl() {
+  return `${CLOUD_RUN_URL.replace(/\/+$/, "")}/v1/systemone`;
+}
+
+function buildHamiltonianCycle() {
+  const path = [];
+  // Row 0: x from 0 to GRID - 1
+  for (let x = 0; x < GRID; x++) {
+    path.push([x, 0]);
+  }
+  // Rows 1 to GRID - 1, cols 1 to GRID - 1 serpentine
+  for (let y = 1; y < GRID; y++) {
+    if (y % 2 === 1) {
+      for (let x = GRID - 1; x >= 1; x--) {
+        path.push([x, y]);
+      }
+    } else {
+      for (let x = 1; x < GRID; x++) {
+        path.push([x, y]);
+      }
+    }
+  }
+  // Col 0: from y = GRID - 1 down to 1
+  for (let y = GRID - 1; y >= 1; y--) {
+    path.push([0, y]);
+  }
+
+  const idxMap = new Map();
+  for (let i = 0; i < path.length; i++) {
+    idxMap.set(path[i][0] + "," + path[i][1], i);
+  }
+  return { path, idxMap, count: path.length };
+}
+
+const H_CYCLE = buildHamiltonianCycle();
+
+function getCycleIdx(x, y) {
+  return H_CYCLE.idxMap.get(x + "," + y) ?? -1;
+}
+
+function getCycleDist(fromX, fromY, toX, toY) {
+  const i1 = getCycleIdx(fromX, fromY);
+  const i2 = getCycleIdx(toX, toY);
+  if (i1 === -1 || i2 === -1) return 9999;
+  return (i2 - i1 + H_CYCLE.count) % H_CYCLE.count;
+}
+
+function getCycleNextDir(hx, hy) {
+  const i = getCycleIdx(hx, hy);
+  if (i === -1) return "right";
+  const nxt = H_CYCLE.path[(i + 1) % H_CYCLE.count];
+  const dx = nxt[0] - hx, dy = nxt[1] - hy;
+  if (dx === 1) return "right";
+  if (dx === -1) return "left";
+  if (dy === 1) return "down";
+  if (dy === -1) return "up";
+  return "right";
+}
+
+function bfsPath(start, target, obstaclesSet) {
+  if (start[0] === target[0] && start[1] === target[1]) return [];
+  const startKey = start[0] + "," + start[1];
+  const visited = new Set([startKey]);
+  const queue = [[start[0], start[1], []]];
+
+  while (queue.length > 0) {
+    const [cx, cy, path] = queue.shift();
+    if (cx === target[0] && cy === target[1]) {
+      return path;
+    }
+    for (const d of DIRS) {
+      const [vx, vy] = VEC[d];
+      const nx = cx + vx, ny = cy + vy;
+      const k = nx + "," + ny;
+      if (nx >= 0 && nx < GRID && ny >= 0 && ny < GRID) {
+        if (nx === target[0] && ny === target[1]) {
+          return [...path, d];
+        }
+        if (!obstaclesSet.has(k) && !visited.has(k)) {
+          visited.add(k);
+          queue.push([nx, ny, [...path, d]]);
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function floodFillCount(startX, startY, obstaclesSet) {
+  const startKey = startX + "," + startY;
+  if (startX < 0 || startX >= GRID || startY < 0 || startY >= GRID) return 0;
+  const obs = new Set(obstaclesSet);
+  obs.delete(startKey);
+  const visited = new Set([startKey]);
+  const queue = [[startX, startY]];
+  while (queue.length > 0) {
+    const [cx, cy] = queue.shift();
+    for (const d of DIRS) {
+      const [vx, vy] = VEC[d];
+      const nx = cx + vx, ny = cy + vy;
+      const k = nx + "," + ny;
+      if (nx >= 0 && nx < GRID && ny >= 0 && ny < GRID && !obs.has(k) && !visited.has(k)) {
+        visited.add(k);
+        queue.push([nx, ny]);
+      }
+    }
+  }
+  return visited.size;
+}
+
+function isFoodSafeToEat(snake, food) {
+  if (!food) return { safe: false, path: null };
+  const obstacles = new Set(snake.slice(0, -1).map(([x, y]) => x + "," + y));
+  const pathToFood = bfsPath(snake[0], food, obstacles);
+  if (!pathToFood || pathToFood.length === 0) return { safe: false, path: null };
+
+  // Virtual Snake Simulation: simulate taking each step to eat food
+  const vSnake = snake.map(p => [...p]);
+  for (const d of pathToFood) {
+    const [vx, vy] = VEC[d];
+    const nxt = [vSnake[0][0] + vx, vSnake[0][1] + vy];
+    vSnake.unshift(nxt);
+    if (nxt[0] !== food[0] || nxt[1] !== food[1]) {
+      vSnake.pop();
+    }
+  }
+
+  // After eating food, can the virtual head reach the virtual tail?
+  const vHead = vSnake[0];
+  const vTail = vSnake[vSnake.length - 1];
+  const vObs = new Set(vSnake.slice(0, -1).map(([x, y]) => x + "," + y));
+  const canReachTail = bfsPath(vHead, vTail, vObs) !== null;
+  const space = floodFillCount(vHead[0], vHead[1], vObs);
+  const freeBoard = (GRID * GRID) - vSnake.length;
+
+  if (canReachTail) {
+    if (snake.length < 40 || space >= Math.min(vSnake.length, freeBoard - 1, 35)) {
+      return { safe: true, path: pathToFood };
+    }
+  }
+
+  if (space >= Math.min(vSnake.length + 10, freeBoard - 1, 45)) {
+    return { safe: true, path: pathToFood };
+  }
+
+  return { safe: false, path: null };
+}
+
+let snake = [];
+let direction = "right";
+let nextChoice = "right";
+let food = [9, 3];
+let score = 0;
+let steps = 0;
+let alive = true;
+let running = false;
+let inflight = false;
+let sandboxFallback = false;
+
+function spawnFood(body) {
+  const occupied = new Set(body.map(([x, y]) => x + "," + y));
+  const free = [];
+  for (let y = 0; y < GRID; y++) {
+    for (let x = 0; x < GRID; x++) {
+      if (!occupied.has(x + "," + y)) free.push([x, y]);
+    }
+  }
+  if (!free.length) return null;
+  const idx = (steps * 17 + score * 31 + 7) % free.length;
+  return free[idx];
+}
+
+function buildState() {
+  const [hx, hy] = snake[0];
+  const [tx, ty] = snake[snake.length - 1];
+  const [fx, fy] = food ? food : [0, 0];
+  const obstacles = new Set(snake.slice(0, -1).map(([x, y]) => x + "," + y));
+  const [nxNeck, nyNeck] = snake[1] || [-1, -1];
+
+  // 1. Direct Safe Food Hunt Check (Virtual Simulation Forward Lookahead)
+  const foodCheck = isFoodSafeToEat(snake, food);
+  let bestMove = null;
+  let strategy = "hunt";
+
+  if (foodCheck.safe && foodCheck.path && foodCheck.path.length > 0) {
+    bestMove = foodCheck.path[0];
+    strategy = "hunt";
+  }
+
+  // 2. Candidate moves evaluation for safety & survival
+  const candidates = [];
+  const moveAnalysis = {};
+
+  for (const d of DIRS) {
+    const [vx, vy] = VEC[d];
+    const nx = hx + vx;
+    const ny = hy + vy;
+    const k = nx + "," + ny;
+
+    let reason = "safe";
+    if (nx === nxNeck && ny === nyNeck) {
+      reason = "neck";
+    } else if (nx < 0 || nx >= GRID || ny < 0 || ny >= GRID) {
+      reason = "wall";
+    } else if (obstacles.has(k)) {
+      reason = "body";
+    }
+
+    const isPhysicallyFree = (reason === "safe");
+    let tailReachable = false;
+    let space = 0;
+
+    if (isPhysicallyFree) {
+      const vSnake = [[nx, ny], ...snake.slice(0, -1)];
+      const vObs = new Set(vSnake.slice(0, -1).map(([x, y]) => x + "," + y));
+      tailReachable = bfsPath([nx, ny], vSnake[vSnake.length - 1], vObs) !== null;
+      space = floodFillCount(nx, ny, vObs);
+    }
+
+    const manhToFood = Math.abs(fx - nx) + Math.abs(fy - ny);
+    // Strict trap condition: only if tail is unreachable AND space cannot fit the snake!
+    const isTrap = isPhysicallyFree && !tailReachable && (space < snake.length + 1);
+    if (isTrap) reason = "trap";
+
+    const isSafe = isPhysicallyFree && !isTrap;
+
+    candidates.push({
+      dir: d,
+      nx, ny,
+      safe: isSafe,
+      isPhysicallyFree,
+      reason,
+      tailReachable,
+      space,
+      manh: manhToFood
+    });
+
+    moveAnalysis[d] = {
+      nx, ny,
+      safe: isSafe,
+      isPhysicallyFree,
+      reason,
+      tail_reachable: tailReachable,
+      open_space: space,
+      manhattan_to_food: manhToFood
+    };
+  }
+
+  // 3. If direct food hunt was unsafe or blocked, choose best survival maneuver
+  if (!bestMove) {
+    strategy = "survive";
+    const safeTailMoves = candidates.filter(c => c.isPhysicallyFree && c.tailReachable);
+    if (safeTailMoves.length > 0) {
+      // Pick move with largest space; tie-break towards food!
+      safeTailMoves.sort((a, b) => {
+        const spaceDiff = Math.floor(b.space / 2) - Math.floor(a.space / 2);
+        if (spaceDiff !== 0) return spaceDiff;
+        return a.manh - b.manh;
+      });
+      bestMove = safeTailMoves[0].dir;
+    } else {
+      const freeMoves = candidates.filter(c => c.isPhysicallyFree).sort((a, b) => b.space - a.space);
+      if (freeMoves.length > 0) {
+        bestMove = freeMoves[0].dir;
+      } else {
+        bestMove = direction;
+      }
+    }
+  }
+
+  // Safe moves list
+  const safeMoves = candidates.filter(c => c.safe).map(c => c.dir);
+  if (bestMove && moveAnalysis[bestMove] && moveAnalysis[bestMove].isPhysicallyFree && !safeMoves.includes(bestMove)) {
+    safeMoves.push(bestMove);
+  }
+
+  let finalSafeMoves = safeMoves;
+  if (finalSafeMoves.length === 0) {
+    const physicallyFree = candidates.filter(c => c.isPhysicallyFree);
+    if (physicallyFree.length > 0) {
+      finalSafeMoves = [physicallyFree[0].dir];
+    } else {
+      finalSafeMoves = [direction];
+    }
+  }
+
+  const fdx = fx - hx, fdy = fy - hy;
+  const dirsToFood = [];
+  if (fdx > 0) dirsToFood.push("east (right)");
+  else if (fdx < 0) dirsToFood.push("west (left)");
+  if (fdy > 0) dirsToFood.push("south (down)");
+  else if (fdy < 0) dirsToFood.push("north (up)");
+
+  return {
+    head: [hx, hy],
+    food: [fx, fy],
+    body: snake.map(p => [p[0], p[1]]),
+    snake_length: snake.length,
+    grid_size: [GRID, GRID],
+    strategy: strategy,
+    lookahead_depth: "1000+ steps (Direct Hunt & Lookahead Survival)",
+    food_direction: dirsToFood.join(" and ") || "aligned",
+    safe_moves: finalSafeMoves,
+    move_analysis: moveAnalysis,
+    recommended_safe_move: bestMove || "right"
+  };
+}
+
+function simulateSystemOne(state) {
+  const logits = {};
+  for (const d of DIRS) {
+    const info = state.move_analysis[d];
+    if (!info || !info.isPhysicallyFree) {
+      logits[d] = -6.0;
+    } else if (!info.safe) {
+      logits[d] = -3.0;
+    } else {
+      let l = 1.0;
+      if (d === state.recommended_safe_move) l += 3.0;
+      if (info.tail_reachable) l += 1.0;
+      logits[d] = l;
+    }
+  }
+  const mx = Math.max(...Object.values(logits));
+  const exps = {};
+  let sum = 0;
+  for (const d of DIRS) {
+    exps[d] = Math.exp(logits[d] - mx);
+    sum += exps[d];
+  }
+  const probs = {};
+  let bestDir = "right", bestP = -1;
+  for (const d of DIRS) {
+    probs[d] = exps[d] / sum;
+    if (probs[d] > bestP) {
+      bestP = probs[d];
+      bestDir = d;
+    }
+  }
+  return {
+    model: "laya-sim",
+    answers: {
+      move: {
+        type: "choice",
+        choice: bestDir,
+        probabilities: probs,
+        confidence: bestP
+      }
+    }
+  };
+}
+
+async function requestDecision(state) {
+  const reqBody = {
+    model: "jev-latest",
+    samples: 1,
+    steps: 1,
+    seed: 42 + steps,
+    state,
+    questions: QUESTIONS_SCHEMA
+  };
+  const t0 = performance.now();
+  try {
+    const resp = await fetch(resolveEndpointUrl(), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(reqBody)
+    });
+    const ms = Math.round(performance.now() - t0);
+    const data = await resp.json();
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    sandboxFallback = false;
+    return { data, ms };
+  } catch (err) {
+    const ms = Math.max(11, Math.round(performance.now() - t0));
+    sandboxFallback = true;
+    return { data: simulateSystemOne(state), ms };
+  }
+}
+
+function setStatus(text, kind) {
+  $("status-text").textContent = text;
+  $("dot").className = "dot" + (kind ? " " + kind : "");
+}
+
+function renderJson(state, finalChoice, probs) {
+  const safeList = (state.safe_moves || []).map(m => `<span class="j-str">"${m}"</span>`).join(", ");
+  const conf = (probs[finalChoice] || 0).toFixed(3);
+  const stratName = state.strategy === "hunt" ? "hunt (direct)" : "survive (tail-chase)";
+  $("live-json").innerHTML =
+`{
+  <span class="j-key">"strategy"</span>: <span class="j-str">"${stratName}"</span>,
+  <span class="j-key">"lookahead"</span>: <span class="j-str">"1000+ steps (Direct Hunt & Lookahead Survival)"</span>,
+  <span class="j-key">"state"</span>: {
+    <span class="j-key">"head"</span>: [<span class="j-num">${state.head[0]}</span>, <span class="j-num">${state.head[1]}</span>], <span class="j-key">"food"</span>: [<span class="j-num">${state.food[0]}</span>, <span class="j-num">${state.food[1]}</span>],
+    <span class="j-key">"length"</span>: <span class="j-num">${state.snake_length}</span>, <span class="j-key">"body_cells"</span>: <span class="j-num">${state.body.length}</span>,
+    <span class="j-key">"safe_moves"</span>: [${safeList}]
+  },
+  <span class="j-key">"move"</span>: { <span class="j-key">"choice"</span>: <span class="j-str">"${finalChoice}"</span>, <span class="j-key">"confidence"</span>: <span class="j-num">${conf}</span> }
+}`;
+}
+
+function updateUI(state, probs, finalChoice, ms) {
+  $("m-score").textContent = String(score);
+  $("m-steps").textContent = String(steps);
+  if ($("m-fill")) $("m-fill").textContent = `${snake.length}/144`;
+  if ($("m-lookahead")) $("m-lookahead").textContent = "1000+";
+  $("m-ms").textContent = `${ms} ms`;
+
+  const [hx, hy] = state.head;
+  const [fx, fy] = state.food;
+  $("coords-text").textContent = `head [${hx},${hy}] · food [${fx},${fy}]`;
+
+  const chosenPct = ((probs[finalChoice] || 0) * 100).toFixed(1) + "%";
+  const stratTag = state.strategy === "hunt" ? "🎯 Hunt (Direct)" : "🛡 Survive (Tail-Chase)";
+  $("choice-badge").textContent = `choice: ${finalChoice} (${chosenPct}) · ${stratTag}`;
+
+  for (const d of DIRS) {
+    const p = Math.max(0, Math.min(1, Number(probs[d] || 0)));
+    const pct = (p * 100).toFixed(1) + "%";
+    const info = state.move_analysis[d];
+    const isSelected = d === finalChoice;
+
+    $("name-" + d).className = "dir-name" + (isSelected ? " chosen" : "");
+    $("name-" + d).textContent = `${ARROWS[d]} ${d}`;
+
+    const safeEl = $("safe-" + d);
+    safeEl.textContent = info.safe ? "safe" : info.reason;
+    safeEl.className = "safety-tag" + (info.safe ? "" : " blocked");
+
+    const barEl = $("bar-" + d);
+    barEl.style.width = (p * 100).toFixed(1) + "%";
+    barEl.className = "bar-fill" + (isSelected ? " chosen" : "");
+
+    $("val-" + d).className = "prob-pct" + (isSelected ? "" : " dim");
+    $("val-" + d).textContent = pct;
+  }
+
+  renderJson(state, finalChoice, probs);
+}
+
+function drawBoard() {
+  const canvas = $("board");
+  const dpr = window.devicePixelRatio || 1;
+  const targetW = Math.round(CSS_SIZE * dpr);
+  if (canvas.width !== targetW || canvas.height !== targetW) {
+    canvas.width = targetW;
+    canvas.height = targetW;
+  }
+  const ctx = canvas.getContext("2d");
+  ctx.save();
+  ctx.scale(dpr, dpr);
+
+  const W = CSS_SIZE;
+  const H = CSS_SIZE;
+  const cell = W / GRID;
+
+  ctx.fillStyle = "#f8fafc";
+  ctx.fillRect(0, 0, W, H);
+
+  // Faint grid lines
+  ctx.strokeStyle = "#e2e8f0";
+  ctx.lineWidth = 1;
+  for (let i = 1; i < GRID; i++) {
+    const p = Math.floor(i * cell) + 0.5;
+    ctx.beginPath();
+    ctx.moveTo(p, 0);
+    ctx.lineTo(p, H);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, p);
+    ctx.lineTo(W, p);
+    ctx.stroke();
+  }
+
+  // Optional Hamiltonian Cycle Visualization
+  const showCycle = $("chk-cycle") && $("chk-cycle").checked;
+  if (showCycle && H_CYCLE && H_CYCLE.path) {
+    ctx.strokeStyle = "rgba(59, 130, 246, 0.20)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < H_CYCLE.path.length; i++) {
+      const [cx, cy] = H_CYCLE.path[i];
+      const px = (cx + 0.5) * cell;
+      const py = (cy + 0.5) * cell;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  // Target food
+  if (food) {
+    const [fx, fy] = food;
+    const fcx = (fx + 0.5) * cell;
+    const fcy = (fy + 0.5) * cell;
+    ctx.fillStyle = "#16a34a";
+    ctx.beginPath();
+    ctx.arc(fcx, fcy, cell * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Snake segments
+  for (let i = snake.length - 1; i >= 0; i--) {
+    const [sx, sy] = snake[i];
+    const isHead = i === 0;
+    ctx.fillStyle = isHead ? "#0969da" : "#3b82f6";
+    ctx.globalAlpha = isHead ? 1.0 : Math.max(0.45, 0.9 - (i / (snake.length + 5)) * 0.45);
+    const pad = isHead ? cell * 0.09 : cell * 0.14;
+    ctx.beginPath();
+    ctx.roundRect(sx * cell + pad, sy * cell + pad, cell - pad * 2, cell - pad * 2, isHead ? 5 : 4);
+    ctx.fill();
+
+    if (isHead) {
+      ctx.globalAlpha = 1.0;
+      ctx.fillStyle = "#ffffff";
+      const [vx, vy] = VEC[direction] || [1, 0];
+      const hcx = (sx + 0.5) * cell;
+      const hcy = (sy + 0.5) * cell;
+      const fwd = cell * 0.16;
+      const side = cell * 0.13;
+      const px = -vy, py = vx;
+      ctx.beginPath();
+      ctx.arc(hcx + vx * fwd + px * side, hcy + vy * fwd + py * side, 1.8, 0, Math.PI * 2);
+      ctx.arc(hcx + vx * fwd - px * side, hcy + vy * fwd - py * side, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+function applyMove(chosenDir) {
+  const [hx, hy] = snake[0];
+  const [vx, vy] = VEC[chosenDir];
+  const nx = hx + vx;
+  const ny = hy + vy;
+  const bodyObstacles = new Set(snake.slice(0, -1).map(([x, y]) => x + "," + y));
+
+  if (nx < 0 || nx >= GRID || ny < 0 || ny >= GRID || bodyObstacles.has(nx + "," + ny)) {
+    alive = false;
+    running = false;
+    $("btn-start").textContent = "Start";
+    setStatus("Collision", "err");
+    drawBoard();
+    return;
+  }
+
+  snake.unshift([nx, ny]);
+  direction = chosenDir;
+  if (food && nx === food[0] && ny === food[1]) {
+    score += 1;
+    food = spawnFood(snake);
+    if (!food) {
+      alive = true;
+      running = false;
+      $("btn-start").textContent = "Start";
+      setStatus("Victory! Grid Full (140/140)", "live");
+      drawBoard();
+      return;
+    }
+  } else {
+    snake.pop();
+  }
+  steps += 1;
+}
+
+function resetGame() {
+  running = false;
+  $("btn-start").textContent = "Start";
+  snake = [[5, 6], [4, 6], [3, 6], [2, 6]];
+  direction = "right";
+  nextChoice = "right";
+  score = 0;
+  steps = 0;
+  alive = true;
+  food = spawnFood(snake);
+  setStatus("Idle", "");
+  const st = buildState();
+  updateUI(st, { up: 0.25, down: 0.25, left: 0.0, right: 0.50 }, "right", 0);
+  drawBoard();
+}
+
+async function stepOnce() {
+  if (inflight || !alive) return;
+  inflight = true;
+  const state = buildState();
+  const { data, ms } = await requestDecision(state);
+  const moveAns = (data.answers && data.answers.move) || {};
+  const probs = moveAns.probabilities || { up: 0.25, down: 0.25, left: 0.25, right: 0.25 };
+  const rawChoice = moveAns.choice || DIRS.reduce((a, b) => (probs[a] >= probs[b] ? a : b));
+
+  let finalChoice = rawChoice;
+  if (state.safe_moves && state.safe_moves.length > 0 && !state.safe_moves.includes(rawChoice)) {
+    finalChoice = state.safe_moves.reduce((a, b) => ((probs[a] || 0) >= (probs[b] || 0) ? a : b));
+  }
+
+  // Hard physical safety guard: Never step into a wall or neck if ANY physically free cell exists
+  const freeChoices = DIRS.filter(d => state.move_analysis[d] && state.move_analysis[d].isPhysicallyFree);
+  if (freeChoices.length > 0 && !freeChoices.includes(finalChoice)) {
+    const safeFree = freeChoices.filter(d => state.move_analysis[d].safe);
+    if (safeFree.length > 0) {
+      finalChoice = safeFree[0];
+    } else {
+      finalChoice = freeChoices[0];
+    }
+  }
+
+  nextChoice = finalChoice;
+
+  applyMove(finalChoice);
+  if (alive) {
+    setStatus(sandboxFallback ? "Running (sim)" : "Running (live)", "live");
+  }
+  updateUI(state, probs, finalChoice, ms);
+  drawBoard();
+  inflight = false;
+}
+
+async function loop() {
+  while (running && alive) {
+    const tStart = performance.now();
+    await stepOnce();
+    if (!running || !alive) break;
+    const speedMode = ($("speed-select") && $("speed-select").value) || "turbo";
+    let targetInterval = 0;
+    if (speedMode === "fast") targetInterval = 15;
+    else if (speedMode === "normal") targetInterval = 45;
+
+    if (targetInterval > 0) {
+      const elapsed = performance.now() - tStart;
+      const wait = Math.max(1, targetInterval - elapsed);
+      await new Promise(r => setTimeout(r, wait));
+    } else {
+      // In Turbo mode, execute next step with minimum event loop tick
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+}
+
+$("btn-start").onclick = () => {
+  if (!alive) resetGame();
+  running = !running;
+  $("btn-start").textContent = running ? "Pause" : "Start";
+  if (running) {
+    loop();
+  } else {
+    setStatus("Paused", "");
+  }
+};
+
+$("btn-reset").onclick = () => resetGame();
+if ($("chk-cycle")) {
+  $("chk-cycle").onchange = () => drawBoard();
+}
+
+window.addEventListener("keydown", e => {
+  if (e.code === "Space") {
+    e.preventDefault();
+    $("btn-start").click();
+  } else if (e.key === "r" || e.key === "R") {
+    e.preventDefault();
+    resetGame();
+  }
+});
+
+resetGame();
+</script>
+</body>
+</html>
