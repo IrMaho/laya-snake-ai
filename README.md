@@ -1,5 +1,9 @@
 # 🐍 Laya AI Snake - System 1 Autonomous Decision Engine
 
+<p align="center">
+  <b><a href="README.md">🇬🇧 English</a></b> | <b><a href="README_FA.md">🇮🇷 فارسی</a></b>
+</p>
+
 An ultra-fast, intelligent, and mathematically calibrated **Snake AI** powered by the **Laya System 1 Decision Model** ([`convaiinnovations/laya`](https://huggingface.co/convaiinnovations/laya)) running locally on **NVIDIA GPU (CUDA)** via FastAPI.
 
 Featuring a **Dual-Engine Forward Virtual Lookahead System (1000+ Steps)** combined with the Laya System 1 Neural Decision Head to eliminate suicidal traps, wall collisions, and robotic circling while hunting apples at maximum throughput.
