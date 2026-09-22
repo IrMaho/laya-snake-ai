@@ -3,1121 +3,1714 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>laya / snake</title>
+  <title>Laya Tactical Battle Arena · Cyber-Snake AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg-dark: #07090e;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(51, 65, 85, 0.45);
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-red: #f43f5e;
+      --accent-amber: #f59e0b;
+      --accent-purple: #a855f7;
+      --accent-pink: #ec4899;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
-    html, body {
-      background: #ffffff;
-      color: #0f172a;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    body {
+      background: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 20% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 80% 85%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+        linear-gradient(180deg, #07090e 0%, #0d131f 100%);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 13px;
       line-height: 1.4;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    body {
+      min-height: 100vh;
       padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    .wrap {
-      width: 780px;
+    .container {
+      width: 960px;
       max-width: 100%;
       margin: 0 auto;
-      background: #ffffff;
-      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    /* Single non-wrapping top bar: zero layout shift */
-    .topbar {
+    /* Top Command Header */
+    .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-wrap: nowrap;
-      white-space: nowrap;
-      height: 40px;
-      padding-bottom: 10px;
-      margin-bottom: 12px;
-      border-bottom: 1px solid #e2e8f0;
-      gap: 10px;
+      flex-wrap: wrap;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 10px 18px;
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
 
-    .top-left {
+    .brand {
       display: flex;
       align-items: center;
-      flex-wrap: nowrap;
       gap: 10px;
-      min-width: 0;
     }
 
-    .title {
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 15px;
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+    }
+
+    .brand-title {
+      font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
-      color: #0f172a;
+      font-size: 15px;
+      letter-spacing: -0.5px;
+      color: #fff;
     }
 
-    .status {
+    .brand-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      color: var(--accent-cyan);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .hud-stats {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .hud-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(2, 6, 23, 0.6);
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 12px;
+    }
+
+    .hud-label {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .hud-val {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .hud-hearts {
+      display: flex;
+      gap: 3px;
+      font-size: 14px;
+    }
+
+    .threat-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .threat-recon { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: var(--accent-green); }
+    .threat-combat { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: var(--accent-amber); }
+    .threat-critical { background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.5); color: var(--accent-red); animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 8px 14px;
+      gap: 10px;
+    }
+
+    .mode-pills {
+      display: flex;
+      background: rgba(2, 6, 23, 0.8);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      gap: 3px;
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mode-btn.active {
+      background: var(--accent-cyan);
+      color: #041019;
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+    }
+
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      width: 130px;
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 8px;
       font-size: 12px;
-      color: #475569;
-      font-variant-numeric: tabular-nums;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #94a3b8;
-      flex-shrink: 0;
-    }
-    .dot.live { background: #16a34a; }
-    .dot.warn { background: #d97706; }
-    .dot.err { background: #dc2626; }
-
-    .metrics {
-      display: flex;
-      align-items: center;
-      flex-wrap: nowrap;
-      gap: 12px;
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 12px;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .metric {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 4px;
-    }
-    .metric-label {
-      color: #64748b;
-      font-weight: 500;
-    }
-    .metric-val {
-      color: #0f172a;
-      font-weight: 700;
-      display: inline-block;
-      text-align: right;
-    }
-    #m-score { width: 24px; }
-    #m-steps { width: 34px; }
-    #m-fill { width: 48px; }
-    #m-lookahead { width: 42px; color: #0969da; }
-    #m-ms { width: 44px; }
-
-    .top-actions {
-      display: flex;
-      align-items: center;
-      flex-wrap: nowrap;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    button {
-      height: 30px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      font-size: 13px;
       font-weight: 600;
-      border-radius: 5px;
       cursor: pointer;
-      text-align: center;
-      white-space: nowrap;
-      flex-shrink: 0;
+      transition: all 0.15s ease;
+      user-select: none;
     }
 
-    #btn-start {
-      width: 80px;
-      background: #0969da;
-      color: #ffffff;
-      border: 1px solid #0969da;
-    }
-    #btn-start:hover {
-      background: #0860ca;
+    .btn:hover {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: rgba(255, 255, 255, 0.25);
     }
 
-    #btn-reset {
-      width: 60px;
-      background: #ffffff;
-      color: #0f172a;
-      border: 1px solid #cbd5e1;
+    .btn-primary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-color: #34d399;
+      color: #022013;
+      font-weight: 700;
     }
-    #btn-reset:hover {
-      background: #f1f5f9;
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #34d399, #10b981);
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.5);
     }
 
-    /* Main 2-column layout: 360px canvas + 360px right column */
-    .main-grid {
+    .btn-laser {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border-color: #38bdf8;
+      color: #fff;
+    }
+    .btn-laser:hover:not(:disabled) {
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.6);
+    }
+    .btn-laser:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-warp {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      border-color: #a78bfa;
+      color: #fff;
+    }
+    .btn-warp:hover:not(:disabled) {
+      box-shadow: 0 0 14px rgba(167, 139, 250, 0.6);
+    }
+    .btn-warp:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    select {
+      background: rgba(2, 6, 23, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Main Battle Layout */
+    .arena-grid {
       display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 16px;
-      align-items: start;
+      grid-template-columns: 440px 1fr;
+      gap: 14px;
     }
 
-    .board-box {
-      width: 360px;
-      height: 360px;
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
+    @media (max-width: 860px) {
+      .arena-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Canvas Card */
+    .canvas-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      position: relative;
       overflow: hidden;
     }
 
-    canvas#board {
+    .canvas-wrap {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      background: #020617;
+      border: 2px solid rgba(56, 189, 248, 0.3);
+      border-radius: 12px;
+      box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8), 0 0 20px rgba(6, 182, 212, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #game-canvas {
       display: block;
-      width: 360px;
-      height: 360px;
+      border-radius: 8px;
     }
 
-    .right-col {
-      height: 360px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .panel {
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
+    .canvas-overlay-banner {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(2, 6, 23, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 6px;
-      padding: 10px 12px;
-      color: #0f172a;
+      padding: 4px 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent-cyan);
+      pointer-events: none;
     }
 
-    .probs-panel {
-      height: 173px;
+    .grid-expand-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .mini-btn {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .mini-btn:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-cyan);
+      color: #fff;
+    }
+
+    /* Right Side Panels: Diagnostics & Telemetry */
+    .telemetry-col {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      gap: 12px;
     }
 
-    .json-panel {
-      height: 175px;
-      display: flex;
-      flex-direction: column;
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
 
-    .panel-head {
+    .card-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 6px;
+      margin-bottom: 10px;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
-      font-weight: 600;
-      color: #0f172a;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 6px;
     }
 
-    .panel-sub {
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 11px;
-      font-weight: 500;
-      color: #475569;
-      font-variant-numeric: tabular-nums;
+    .card-head-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
     }
 
-    .prob-rows {
+    /* Tactical Probability Matrix */
+    .tactical-matrix {
       display: flex;
       flex-direction: column;
       gap: 7px;
     }
 
-    .prob-row {
-      display: grid;
-      grid-template-columns: 60px 1fr 52px 46px;
+    .matrix-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .matrix-meta {
+      display: flex;
       align-items: center;
-      gap: 8px;
-      height: 24px;
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 12px;
-      font-variant-numeric: tabular-nums;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
     }
 
-    .dir-name {
-      color: #475569;
-      font-weight: 600;
-    }
-    .dir-name.chosen {
-      color: #0969da;
+    .matrix-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-main);
     }
 
-    .bar-track {
+    .matrix-bar-wrap {
+      width: 100%;
       height: 8px;
-      background: #e2e8f0;
+      background: rgba(2, 6, 23, 0.8);
       border-radius: 4px;
       overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      position: relative;
     }
 
-    .bar-fill {
+    .matrix-bar-fill {
       height: 100%;
-      background: #94a3b8;
-      width: 0%;
-      transition: width 0.04s ease-out;
-    }
-    .bar-fill.chosen {
-      background: #0969da;
-    }
-
-    .prob-pct {
-      text-align: right;
-      font-weight: 600;
-      color: #0f172a;
-    }
-    .prob-pct.dim {
-      color: #94a3b8;
-      font-weight: 500;
-    }
-
-    .safety-tag {
-      font-size: 11px;
-      font-weight: 600;
-      text-align: right;
-      color: #16a34a;
-    }
-    .safety-tag.blocked {
-      color: #dc2626;
-    }
-
-    pre#live-json {
-      flex: 1;
-      margin: 0;
-      padding: 6px 8px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
       border-radius: 4px;
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 11px;
-      line-height: 1.38;
-      color: #0f172a;
-      overflow: hidden;
-      white-space: pre;
-      font-variant-numeric: tabular-nums;
+      transition: width 0.15s ease;
+      width: 0%;
     }
 
-    .j-key { color: #0550ae; font-weight: 600; }
-    .j-str { color: #116329; }
-    .j-num { color: #953800; font-weight: 600; }
+    /* Directions Horizontal Bars */
+    .dir-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
 
-    @media (max-width: 720px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-      .board-box, canvas#board {
-        width: 100%;
-        max-width: 360px;
-      }
+    .dir-card {
+      background: rgba(2, 6, 23, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 7px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .dir-card.chosen {
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.12);
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
+    }
+
+    .dir-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Live JSON Inspector */
+    .json-pre {
+      background: #020617;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #94a3b8;
+      max-height: 160px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Footer */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #64748b;
+      padding: 4px 6px;
+    }
+
+    .footer a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Screen shake for damage feedback */
+    .shake {
+      animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-2px, 0, 0); }
+      20%, 80% { transform: translate3d(3px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="top-left">
-        <span class="title">laya / snake</span>
-        <span class="status">
-          <span id="dot" class="dot"></span>
-          <span id="status-text">Idle</span>
-        </span>
+
+  <div class="container" id="main-container">
+    
+    <!-- Top Command Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-logo">⚔️</div>
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="brand-title">LAYA CYBER-SNAKE</span>
+            <span class="brand-badge">Tactical Arena</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted);">Neural System 1 Tactical Commander</div>
+        </div>
       </div>
 
-      <div class="metrics">
-        <span class="metric">
-          <span class="metric-label">Score</span>
-          <span id="m-score" class="metric-val">0</span>
-        </span>
-        <span class="metric">
-          <span class="metric-label">Step</span>
-          <span id="m-steps" class="metric-val">0</span>
-        </span>
-        <span class="metric">
-          <span class="metric-label">Fill</span>
-          <span id="m-fill" class="metric-val">4/144</span>
-        </span>
-        <span class="metric">
-          <span class="metric-label">Lookahead</span>
-          <span id="m-lookahead" class="metric-val">1000+</span>
-        </span>
-        <span class="metric">
-          <span class="metric-label">Latency</span>
-          <span id="m-ms" class="metric-val">0 ms</span>
-        </span>
+      <div class="hud-stats">
+        <!-- HP Hearts -->
+        <div class="hud-item" title="Snake Vitality Points">
+          <span class="hud-label">HP:</span>
+          <div class="hud-hearts" id="hud-hearts">❤️❤️❤️</div>
+        </div>
+
+        <!-- Ammo Count -->
+        <div class="hud-item" title="Plasma Weapon Ammunition">
+          <span class="hud-label">AMMO:</span>
+          <span class="hud-val" id="hud-ammo" style="color:var(--accent-cyan);">⚡ 3</span>
+        </div>
+
+        <!-- Warp Mana -->
+        <div class="hud-item" title="Quantum Dimension Shift Energy">
+          <span class="hud-label">MANA:</span>
+          <span class="hud-val" id="hud-mana" style="color:var(--accent-purple);">100%</span>
+        </div>
+
+        <!-- Threat Level -->
+        <div class="threat-badge threat-recon" id="hud-threat">
+          <span>●</span> <span id="threat-text">SECURE RECON</span>
+        </div>
+
+        <!-- Score -->
+        <div class="hud-item" title="Score">
+          <span class="hud-label">SCORE:</span>
+          <span class="hud-val" id="hud-score" style="color:var(--accent-green);">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+      <!-- Mode Switcher -->
+      <div class="mode-pills">
+        <button class="mode-btn active" id="btn-mode-battle" onclick="switchMode('battle')">⚔️ Battle Arena</button>
+        <button class="mode-btn" id="btn-mode-classic" onclick="switchMode('classic')">🎯 Pure Snake</button>
       </div>
 
-      <div class="top-actions">
-        <label style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#475569;cursor:pointer;user-select:none;">
-          <input type="checkbox" id="chk-cycle" style="cursor:pointer;accent-color:#0969da;">
-          Cycle
-        </label>
-        <select id="speed-select" style="height:30px; border-radius:5px; border:1px solid #cbd5e1; background:#f8fafc; font-family:inherit; font-weight:600; font-size:12px; padding:0 6px; cursor:pointer; color:#0f172a;">
-          <option value="turbo" selected>⚡ Turbo (Max GPU)</option>
-          <option value="fast">🚀 Fast (15ms)</option>
-          <option value="normal">⏱ Normal (45ms)</option>
+      <!-- Action Buttons -->
+      <div class="action-group">
+        <button class="btn btn-primary" id="btn-start" onclick="toggleGame()">▶ Start Game</button>
+        <button class="btn" id="btn-reset" onclick="resetGame()">↺ Reset</button>
+
+        <button class="btn btn-laser" id="btn-shoot" onclick="triggerManualShoot()" title="Discharge Plasma Laser (Spacebar)">
+          💥 Shoot Laser
+        </button>
+
+        <button class="btn btn-warp" id="btn-warp" onclick="triggerManualWarp()" title="Expand Grid 1 Column Left (E)">
+          🌀 Warp (+1 Col)
+        </button>
+
+        <select id="speed-select" onchange="changeSpeed(this.value)">
+          <option value="0">⚡ Turbo (Max GPU)</option>
+          <option value="15" selected>🚀 Fast (15ms)</option>
+          <option value="45">⏱ Normal (45ms)</option>
+          <option value="120">🐢 Slow (120ms)</option>
         </select>
-        <button id="btn-start" type="button">Start</button>
-        <button id="btn-reset" type="button">Reset</button>
       </div>
     </div>
 
-    <div class="main-grid">
-      <div class="board-box">
-        <canvas id="board"></canvas>
+    <!-- Arena Layout -->
+    <div class="arena-grid">
+      
+      <!-- Canvas Column -->
+      <div class="canvas-card">
+        <div class="canvas-wrap">
+          <canvas id="game-canvas" width="396" height="396"></canvas>
+          <div class="canvas-overlay-banner" id="grid-dim-text">GRID: 12 × 12</div>
+        </div>
+
+        <!-- Dimension Expansion Controls -->
+        <div class="grid-expand-controls">
+          <span style="font-size:11px;color:var(--text-muted);font-weight:600;">Manual Warp:</span>
+          <button class="mini-btn" onclick="expandGrid('left')" title="Expand 1 Column Left">◀ +Left</button>
+          <button class="mini-btn" onclick="expandGrid('right')" title="Expand 1 Column Right">+Right ▶</button>
+          <button class="mini-btn" onclick="expandGrid('up')" title="Expand 1 Row Up">▲ +Up</button>
+          <button class="mini-btn" onclick="expandGrid('down')" title="Expand 1 Row Down">+Down ▼</button>
+        </div>
       </div>
 
-      <div class="right-col">
-        <div class="panel probs-panel">
-          <div class="panel-head">
-            <span>Move Probabilities</span>
-            <span id="choice-badge" class="panel-sub">choice: right (50.0%)</span>
+      <!-- Telemetry Column -->
+      <div class="telemetry-col">
+        
+        <!-- Card 1: Laya Tactical Combat Head -->
+        <div class="card" id="tactical-card">
+          <div class="card-head">
+            <span>🧠 Laya Tactical Combat Decision</span>
+            <span class="card-head-tag" id="tactical-choice-tag">EVALUATING</span>
           </div>
-          <div class="prob-rows">
-            <div class="prob-row">
-              <span class="dir-name" id="name-up">↑ up</span>
-              <div class="bar-track"><div class="bar-fill" id="bar-up"></div></div>
-              <span class="prob-pct dim" id="val-up">25.0%</span>
-              <span class="safety-tag" id="safe-up">safe</span>
+          <div class="tactical-matrix" id="tactical-matrix">
+            <!-- Injected dynamically: Shoot, Evade, Warp, Ammo, Food -->
+          </div>
+        </div>
+
+        <!-- Card 2: Laya Direction Head -->
+        <div class="card">
+          <div class="card-head">
+            <span>🧭 Direction Probabilities</span>
+            <span class="card-head-tag" id="latency-tag">-- ms</span>
+          </div>
+          <div class="dir-grid" id="dir-grid">
+            <div class="dir-card" id="dir-card-up">
+              <div class="dir-head"><span>↑ UP</span><span id="p-up">0%</span></div>
+              <div class="matrix-bar-wrap"><div class="matrix-bar-fill" id="bar-up" style="background:var(--accent-cyan);"></div></div>
             </div>
-            <div class="prob-row">
-              <span class="dir-name" id="name-down">↓ down</span>
-              <div class="bar-track"><div class="bar-fill" id="bar-down"></div></div>
-              <span class="prob-pct dim" id="val-down">25.0%</span>
-              <span class="safety-tag" id="safe-down">safe</span>
+            <div class="dir-card" id="dir-card-down">
+              <div class="dir-head"><span>↓ DOWN</span><span id="p-down">0%</span></div>
+              <div class="matrix-bar-wrap"><div class="matrix-bar-fill" id="bar-down" style="background:var(--accent-cyan);"></div></div>
             </div>
-            <div class="prob-row">
-              <span class="dir-name" id="name-left">← left</span>
-              <div class="bar-track"><div class="bar-fill" id="bar-left"></div></div>
-              <span class="prob-pct dim" id="val-left">0.0%</span>
-              <span class="safety-tag blocked" id="safe-left">neck</span>
+            <div class="dir-card" id="dir-card-left">
+              <div class="dir-head"><span>← LEFT</span><span id="p-left">0%</span></div>
+              <div class="matrix-bar-wrap"><div class="matrix-bar-fill" id="bar-left" style="background:var(--accent-cyan);"></div></div>
             </div>
-            <div class="prob-row">
-              <span class="dir-name chosen" id="name-right">→ right</span>
-              <div class="bar-track"><div class="bar-fill chosen" id="bar-right"></div></div>
-              <span class="prob-pct" id="val-right">50.0%</span>
-              <span class="safety-tag" id="safe-right">safe</span>
+            <div class="dir-card" id="dir-card-right">
+              <div class="dir-head"><span>→ RIGHT</span><span id="p-right">0%</span></div>
+              <div class="matrix-bar-wrap"><div class="matrix-bar-fill" id="bar-right" style="background:var(--accent-cyan);"></div></div>
             </div>
           </div>
         </div>
 
-        <div class="panel json-panel">
-          <div class="panel-head">
-            <span>Last /v1/systemone Call</span>
-            <span id="coords-text" class="panel-sub">head [5,6] · food [9,3]</span>
+        <!-- Card 3: Live /v1/systemone Payload -->
+        <div class="card">
+          <div class="card-head">
+            <span>📡 Live /v1/systemone Telemetry</span>
+            <span class="card-head-tag" id="telemetry-step">Step 0</span>
           </div>
-          <pre id="live-json"></pre>
+          <pre class="json-pre" id="live-json">Awaiting game start...</pre>
         </div>
+
       </div>
+
     </div>
-    <div style="font-size:11px;color:#64748b;text-align:right;padding-top:2px;">
-      Powered by <span style="color:#38bdf8;font-weight:600;">Laya 8M (ModernBERT)</span> &amp; Dual-Engine Spatial Lookahead Simulator
-    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div>Keys: <b>Space</b> = Shoot Laser · <b>E</b> = Warp Grid · <b>Arrows</b> = Manual Move · <b>P</b> = Pause</div>
+      <div>Powered by <a href="https://huggingface.co/convaiinnovations/laya" target="_blank">Laya 8M (ModernBERT)</a> &amp; Dual-Engine Spatial Simulator</div>
+    </footer>
+
   </div>
 
-<script>
-const CLOUD_RUN_URL = "http://localhost:8080"; // Local Laya System 1 Server
-const GRID = 12;
-const CSS_SIZE = 360;
-const DIRS = ["up", "down", "left", "right"];
-const ARROWS = { up: "↑", down: "↓", left: "←", right: "→" };
-const VEC = {
-  up: [0, -1],
-  down: [0, 1],
-  left: [-1, 0],
-  right: [1, 0]
-};
+  <script>
+    /* =========================================================================
+       LAYA TACTICAL CYBER-SNAKE ENGINE
+       ========================================================================= */
 
-const QUESTIONS_SCHEMA = {
-  move: {
-    type: "choice",
-    instructions: "Select the next move for the snake head. Choose recommended_safe_move in safe_moves that reduces manhattan_to_food while preserving open_space.",
-    criteria: {
-      up: "Move north (y - 1)",
-      down: "Move south (y + 1)",
-      left: "Move west (x - 1)",
-      right: "Move east (x + 1)"
-    }
-  }
-};
+    const SERVER_URL = "http://localhost:8080";
+    const CANVAS = document.getElementById("game-canvas");
+    const CTX = CANVAS.getContext("2d");
 
-const $ = id => document.getElementById(id);
+    // Game Mode: 'battle' or 'classic'
+    let gameMode = 'battle';
 
-function resolveEndpointUrl() {
-  return `${CLOUD_RUN_URL.replace(/\/+$/, "")}/v1/systemone`;
-}
-
-function buildHamiltonianCycle() {
-  const path = [];
-  // Row 0: x from 0 to GRID - 1
-  for (let x = 0; x < GRID; x++) {
-    path.push([x, 0]);
-  }
-  // Rows 1 to GRID - 1, cols 1 to GRID - 1 serpentine
-  for (let y = 1; y < GRID; y++) {
-    if (y % 2 === 1) {
-      for (let x = GRID - 1; x >= 1; x--) {
-        path.push([x, y]);
-      }
-    } else {
-      for (let x = 1; x < GRID; x++) {
-        path.push([x, y]);
-      }
-    }
-  }
-  // Col 0: from y = GRID - 1 down to 1
-  for (let y = GRID - 1; y >= 1; y--) {
-    path.push([0, y]);
-  }
-
-  const idxMap = new Map();
-  for (let i = 0; i < path.length; i++) {
-    idxMap.set(path[i][0] + "," + path[i][1], i);
-  }
-  return { path, idxMap, count: path.length };
-}
-
-const H_CYCLE = buildHamiltonianCycle();
-
-function getCycleIdx(x, y) {
-  return H_CYCLE.idxMap.get(x + "," + y) ?? -1;
-}
-
-function getCycleDist(fromX, fromY, toX, toY) {
-  const i1 = getCycleIdx(fromX, fromY);
-  const i2 = getCycleIdx(toX, toY);
-  if (i1 === -1 || i2 === -1) return 9999;
-  return (i2 - i1 + H_CYCLE.count) % H_CYCLE.count;
-}
-
-function getCycleNextDir(hx, hy) {
-  const i = getCycleIdx(hx, hy);
-  if (i === -1) return "right";
-  const nxt = H_CYCLE.path[(i + 1) % H_CYCLE.count];
-  const dx = nxt[0] - hx, dy = nxt[1] - hy;
-  if (dx === 1) return "right";
-  if (dx === -1) return "left";
-  if (dy === 1) return "down";
-  if (dy === -1) return "up";
-  return "right";
-}
-
-function bfsPath(start, target, obstaclesSet) {
-  if (start[0] === target[0] && start[1] === target[1]) return [];
-  const startKey = start[0] + "," + start[1];
-  const visited = new Set([startKey]);
-  const queue = [[start[0], start[1], []]];
-
-  while (queue.length > 0) {
-    const [cx, cy, path] = queue.shift();
-    if (cx === target[0] && cy === target[1]) {
-      return path;
-    }
-    for (const d of DIRS) {
-      const [vx, vy] = VEC[d];
-      const nx = cx + vx, ny = cy + vy;
-      const k = nx + "," + ny;
-      if (nx >= 0 && nx < GRID && ny >= 0 && ny < GRID) {
-        if (nx === target[0] && ny === target[1]) {
-          return [...path, d];
-        }
-        if (!obstaclesSet.has(k) && !visited.has(k)) {
-          visited.add(k);
-          queue.push([nx, ny, [...path, d]]);
-        }
-      }
-    }
-  }
-  return null;
-}
-
-function floodFillCount(startX, startY, obstaclesSet) {
-  const startKey = startX + "," + startY;
-  if (startX < 0 || startX >= GRID || startY < 0 || startY >= GRID) return 0;
-  const obs = new Set(obstaclesSet);
-  obs.delete(startKey);
-  const visited = new Set([startKey]);
-  const queue = [[startX, startY]];
-  while (queue.length > 0) {
-    const [cx, cy] = queue.shift();
-    for (const d of DIRS) {
-      const [vx, vy] = VEC[d];
-      const nx = cx + vx, ny = cy + vy;
-      const k = nx + "," + ny;
-      if (nx >= 0 && nx < GRID && ny >= 0 && ny < GRID && !obs.has(k) && !visited.has(k)) {
-        visited.add(k);
-        queue.push([nx, ny]);
-      }
-    }
-  }
-  return visited.size;
-}
-
-function isFoodSafeToEat(snake, food) {
-  if (!food) return { safe: false, path: null };
-  const obstacles = new Set(snake.slice(0, -1).map(([x, y]) => x + "," + y));
-  const pathToFood = bfsPath(snake[0], food, obstacles);
-  if (!pathToFood || pathToFood.length === 0) return { safe: false, path: null };
-
-  // Virtual Snake Simulation: simulate taking each step to eat food
-  const vSnake = snake.map(p => [...p]);
-  for (const d of pathToFood) {
-    const [vx, vy] = VEC[d];
-    const nxt = [vSnake[0][0] + vx, vSnake[0][1] + vy];
-    vSnake.unshift(nxt);
-    if (nxt[0] !== food[0] || nxt[1] !== food[1]) {
-      vSnake.pop();
-    }
-  }
-
-  // After eating food, can the virtual head reach the virtual tail?
-  const vHead = vSnake[0];
-  const vTail = vSnake[vSnake.length - 1];
-  const vObs = new Set(vSnake.slice(0, -1).map(([x, y]) => x + "," + y));
-  const canReachTail = bfsPath(vHead, vTail, vObs) !== null;
-  const space = floodFillCount(vHead[0], vHead[1], vObs);
-  const freeBoard = (GRID * GRID) - vSnake.length;
-
-  if (canReachTail) {
-    if (snake.length < 40 || space >= Math.min(vSnake.length, freeBoard - 1, 35)) {
-      return { safe: true, path: pathToFood };
-    }
-  }
-
-  if (space >= Math.min(vSnake.length + 10, freeBoard - 1, 45)) {
-    return { safe: true, path: pathToFood };
-  }
-
-  return { safe: false, path: null };
-}
-
-let snake = [];
-let direction = "right";
-let nextChoice = "right";
-let food = [9, 3];
-let score = 0;
-let steps = 0;
-let alive = true;
-let running = false;
-let inflight = false;
-let sandboxFallback = false;
-
-function spawnFood(body) {
-  const occupied = new Set(body.map(([x, y]) => x + "," + y));
-  const free = [];
-  for (let y = 0; y < GRID; y++) {
-    for (let x = 0; x < GRID; x++) {
-      if (!occupied.has(x + "," + y)) free.push([x, y]);
-    }
-  }
-  if (!free.length) return null;
-  const idx = (steps * 17 + score * 31 + 7) % free.length;
-  return free[idx];
-}
-
-function buildState() {
-  const [hx, hy] = snake[0];
-  const [tx, ty] = snake[snake.length - 1];
-  const [fx, fy] = food ? food : [0, 0];
-  const obstacles = new Set(snake.slice(0, -1).map(([x, y]) => x + "," + y));
-  const [nxNeck, nyNeck] = snake[1] || [-1, -1];
-
-  // 1. Direct Safe Food Hunt Check (Virtual Simulation Forward Lookahead)
-  const foodCheck = isFoodSafeToEat(snake, food);
-  let bestMove = null;
-  let strategy = "hunt";
-
-  if (foodCheck.safe && foodCheck.path && foodCheck.path.length > 0) {
-    bestMove = foodCheck.path[0];
-    strategy = "hunt";
-  }
-
-  // 2. Candidate moves evaluation for safety & survival
-  const candidates = [];
-  const moveAnalysis = {};
-
-  for (const d of DIRS) {
-    const [vx, vy] = VEC[d];
-    const nx = hx + vx;
-    const ny = hy + vy;
-    const k = nx + "," + ny;
-
-    let reason = "safe";
-    if (nx === nxNeck && ny === nyNeck) {
-      reason = "neck";
-    } else if (nx < 0 || nx >= GRID || ny < 0 || ny >= GRID) {
-      reason = "wall";
-    } else if (obstacles.has(k)) {
-      reason = "body";
-    }
-
-    const isPhysicallyFree = (reason === "safe");
-    let tailReachable = false;
-    let space = 0;
-
-    if (isPhysicallyFree) {
-      const vSnake = [[nx, ny], ...snake.slice(0, -1)];
-      const vObs = new Set(vSnake.slice(0, -1).map(([x, y]) => x + "," + y));
-      tailReachable = bfsPath([nx, ny], vSnake[vSnake.length - 1], vObs) !== null;
-      space = floodFillCount(nx, ny, vObs);
-    }
-
-    const manhToFood = Math.abs(fx - nx) + Math.abs(fy - ny);
-    // Strict trap condition: only if tail is unreachable AND space cannot fit the snake!
-    const isTrap = isPhysicallyFree && !tailReachable && (space < snake.length + 1);
-    if (isTrap) reason = "trap";
-
-    const isSafe = isPhysicallyFree && !isTrap;
-
-    candidates.push({
-      dir: d,
-      nx, ny,
-      safe: isSafe,
-      isPhysicallyFree,
-      reason,
-      tailReachable,
-      space,
-      manh: manhToFood
-    });
-
-    moveAnalysis[d] = {
-      nx, ny,
-      safe: isSafe,
-      isPhysicallyFree,
-      reason,
-      tail_reachable: tailReachable,
-      open_space: space,
-      manhattan_to_food: manhToFood
+    // Dynamic Grid Geometry
+    let grid = {
+      minX: 0,
+      maxX: 11,
+      minY: 0,
+      maxY: 11
     };
-  }
 
-  // 3. If direct food hunt was unsafe or blocked, choose best survival maneuver
-  if (!bestMove) {
-    strategy = "survive";
-    const safeTailMoves = candidates.filter(c => c.isPhysicallyFree && c.tailReachable);
-    if (safeTailMoves.length > 0) {
-      // Pick move with largest space; tie-break towards food!
-      safeTailMoves.sort((a, b) => {
-        const spaceDiff = Math.floor(b.space / 2) - Math.floor(a.space / 2);
-        if (spaceDiff !== 0) return spaceDiff;
-        return a.manh - b.manh;
-      });
-      bestMove = safeTailMoves[0].dir;
-    } else {
-      const freeMoves = candidates.filter(c => c.isPhysicallyFree).sort((a, b) => b.space - a.space);
-      if (freeMoves.length > 0) {
-        bestMove = freeMoves[0].dir;
+    function getGridCols() { return grid.maxX - grid.minX + 1; }
+    function getGridRows() { return grid.maxY - grid.minY + 1; }
+
+    // Snake State
+    let snake = [
+      { x: 5, y: 6 },
+      { x: 4, y: 6 },
+      { x: 3, y: 6 },
+      { x: 2, y: 6 }
+    ];
+    let currentDir = "right";
+
+    // Collectibles & Items
+    let items = {
+      food: { x: 9, y: 3 },
+      ammo: null,   // { x, y }
+      heart: null,  // { x, y }
+      gift: null    // { x, y }
+    };
+
+    // Enemies (Hostile Drones)
+    let enemies = []; // [ { id, x, y, hp, type: 'drone', color: '#f43f5e', cooldown: 0 } ]
+    let enemySpawnCounter = 0;
+
+    // Projectiles
+    let projectiles = []; // [ { x, y, dx, dy, life } ]
+
+    // Floating Text FX
+    let floatingTexts = []; // [ { text, x, y, color, alpha, vy } ]
+
+    // Particle FX
+    let particles = []; // [ { x, y, vx, vy, color, life, maxLife } ]
+
+    // Inventory & Player Stats
+    let stats = {
+      hp: 3,
+      maxHp: 3,
+      ammo: 3,
+      mana: 100, // 0 to 100%
+      score: 0,
+      highScore: 0,
+      freezeTimer: 0 // EMP freeze frames
+    };
+
+    // Runtime loop controls
+    let isRunning = false;
+    let tickSpeedMs = 15;
+    let stepCount = 0;
+    let isRequestInProgress = false;
+
+    /* =========================================================================
+       INITIALIZATION & RESET
+       ========================================================================= */
+
+    function resetGame() {
+      isRunning = false;
+      document.getElementById("btn-start").textContent = "▶ Start Game";
+      document.getElementById("btn-start").classList.remove("btn-primary");
+      document.getElementById("btn-start").style.background = "#10b981";
+
+      grid = { minX: 0, maxX: 11, minY: 0, maxY: 11 };
+      snake = [
+        { x: 5, y: 6 },
+        { x: 4, y: 6 },
+        { x: 3, y: 6 },
+        { x: 2, y: 6 }
+      ];
+      currentDir = "right";
+
+      stats.hp = 3;
+      stats.ammo = 3;
+      stats.mana = 100;
+      stats.score = 0;
+      stats.freezeTimer = 0;
+
+      enemies = [];
+      projectiles = [];
+      floatingTexts = [];
+      particles = [];
+
+      items.food = spawnFreeCell();
+      items.ammo = (gameMode === 'battle') ? spawnFreeCell() : null;
+      items.heart = null;
+      items.gift = null;
+
+      if (gameMode === 'battle') {
+        spawnEnemy();
+      }
+
+      updateHUD();
+      render();
+    }
+
+    function switchMode(mode) {
+      gameMode = mode;
+      document.getElementById("btn-mode-battle").classList.toggle("active", mode === 'battle');
+      document.getElementById("btn-mode-classic").classList.toggle("active", mode === 'classic');
+      document.getElementById("btn-shoot").style.display = (mode === 'battle') ? 'inline-flex' : 'none';
+      document.getElementById("btn-warp").style.display = (mode === 'battle') ? 'inline-flex' : 'none';
+      document.getElementById("tactical-card").style.display = (mode === 'battle') ? 'block' : 'none';
+      resetGame();
+    }
+
+    function toggleGame() {
+      isRunning = !isRunning;
+      const btn = document.getElementById("btn-start");
+      if (isRunning) {
+        btn.textContent = "⏸ Pause";
+        btn.style.background = "#d97706";
+        gameLoop();
       } else {
-        bestMove = direction;
+        btn.textContent = "▶ Resume";
+        btn.style.background = "#10b981";
       }
     }
-  }
 
-  // Safe moves list
-  const safeMoves = candidates.filter(c => c.safe).map(c => c.dir);
-  if (bestMove && moveAnalysis[bestMove] && moveAnalysis[bestMove].isPhysicallyFree && !safeMoves.includes(bestMove)) {
-    safeMoves.push(bestMove);
-  }
-
-  let finalSafeMoves = safeMoves;
-  if (finalSafeMoves.length === 0) {
-    const physicallyFree = candidates.filter(c => c.isPhysicallyFree);
-    if (physicallyFree.length > 0) {
-      finalSafeMoves = [physicallyFree[0].dir];
-    } else {
-      finalSafeMoves = [direction];
+    function changeSpeed(val) {
+      tickSpeedMs = parseInt(val, 10);
     }
-  }
 
-  const fdx = fx - hx, fdy = fy - hy;
-  const dirsToFood = [];
-  if (fdx > 0) dirsToFood.push("east (right)");
-  else if (fdx < 0) dirsToFood.push("west (left)");
-  if (fdy > 0) dirsToFood.push("south (down)");
-  else if (fdy < 0) dirsToFood.push("north (up)");
+    /* =========================================================================
+       SPAWNING & GRID UTILS
+       ========================================================================= */
 
-  return {
-    head: [hx, hy],
-    food: [fx, fy],
-    body: snake.map(p => [p[0], p[1]]),
-    snake_length: snake.length,
-    grid_size: [GRID, GRID],
-    strategy: strategy,
-    lookahead_depth: "1000+ steps (Direct Hunt & Lookahead Survival)",
-    food_direction: dirsToFood.join(" and ") || "aligned",
-    safe_moves: finalSafeMoves,
-    move_analysis: moveAnalysis,
-    recommended_safe_move: bestMove || "right"
-  };
-}
-
-function simulateSystemOne(state) {
-  const logits = {};
-  for (const d of DIRS) {
-    const info = state.move_analysis[d];
-    if (!info || !info.isPhysicallyFree) {
-      logits[d] = -6.0;
-    } else if (!info.safe) {
-      logits[d] = -3.0;
-    } else {
-      let l = 1.0;
-      if (d === state.recommended_safe_move) l += 3.0;
-      if (info.tail_reachable) l += 1.0;
-      logits[d] = l;
+    function isOccupied(x, y) {
+      if (snake.some(s => s.x === x && s.y === y)) return true;
+      if (items.food && items.food.x === x && items.food.y === y) return true;
+      if (items.ammo && items.ammo.x === x && items.ammo.y === y) return true;
+      if (items.heart && items.heart.x === x && items.heart.y === y) return true;
+      if (items.gift && items.gift.x === x && items.gift.y === y) return true;
+      if (enemies.some(e => e.x === x && e.y === y)) return true;
+      return false;
     }
-  }
-  const mx = Math.max(...Object.values(logits));
-  const exps = {};
-  let sum = 0;
-  for (const d of DIRS) {
-    exps[d] = Math.exp(logits[d] - mx);
-    sum += exps[d];
-  }
-  const probs = {};
-  let bestDir = "right", bestP = -1;
-  for (const d of DIRS) {
-    probs[d] = exps[d] / sum;
-    if (probs[d] > bestP) {
-      bestP = probs[d];
-      bestDir = d;
+
+    function spawnFreeCell() {
+      const free = [];
+      for (let x = grid.minX; x <= grid.maxX; x++) {
+        for (let y = grid.minY; y <= grid.maxY; y++) {
+          if (!isOccupied(x, y)) free.push({ x, y });
+        }
+      }
+      if (free.length === 0) return { x: grid.minX, y: grid.minY };
+      return free[Math.floor(Math.random() * free.length)];
     }
-  }
-  return {
-    model: "laya-sim",
-    answers: {
-      move: {
-        type: "choice",
-        choice: bestDir,
-        probabilities: probs,
-        confidence: bestP
+
+    function spawnEnemy() {
+      if (enemies.length >= 3) return;
+      const cell = spawnFreeCell();
+      // Ensure distance from snake head >= 4
+      const dist = Math.abs(cell.x - snake[0].x) + Math.abs(cell.y - snake[0].y);
+      if (dist < 4) return;
+      enemies.push({
+        id: Date.now() + Math.random(),
+        x: cell.x,
+        y: cell.y,
+        hp: 1,
+        type: 'drone',
+        color: '#f43f5e',
+        stepCounter: 0
+      });
+      addFloatingText("🚨 HOSTILE DRONE DETECTED", cell.x, cell.y, "#f43f5e");
+    }
+
+    /* =========================================================================
+       DIMENSION WARP (EXPAND GRID ON DEMAND)
+       ========================================================================= */
+
+    function expandGrid(side) {
+      if (side === 'left') grid.minX -= 1;
+      else if (side === 'right') grid.maxX += 1;
+      else if (side === 'up') grid.minY -= 1;
+      else if (side === 'down') grid.maxY += 1;
+
+      stats.mana = 0;
+      stats.score += 50;
+
+      addFloatingText(`🌀 WARP: +1 ${side.toUpperCase()}!`, snake[0].x, snake[0].y, "#a855f7");
+      spawnParticles(snake[0].x, snake[0].y, "#a855f7", 20);
+
+      document.getElementById("grid-dim-text").textContent = `GRID: ${getGridCols()} × ${getGridRows()}`;
+      updateHUD();
+      render();
+    }
+
+    function triggerManualWarp() {
+      if (stats.mana >= 50) {
+        expandGrid('left');
+      } else {
+        addFloatingText("WARP NOT CHARGED", snake[0].x, snake[0].y, "#94a3b8");
       }
     }
-  };
-}
 
-async function requestDecision(state) {
-  const reqBody = {
-    model: "jev-latest",
-    samples: 1,
-    steps: 1,
-    seed: 42 + steps,
-    state,
-    questions: QUESTIONS_SCHEMA
-  };
-  const t0 = performance.now();
-  try {
-    const resp = await fetch(resolveEndpointUrl(), {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(reqBody)
+    /* =========================================================================
+       PLASMA WEAPON & PROJECTILES
+       ========================================================================= */
+
+    function fireWeapon(dir) {
+      if (stats.ammo <= 0) {
+        addFloatingText("OUT OF AMMO!", snake[0].x, snake[0].y, "#f59e0b");
+        return;
+      }
+      stats.ammo -= 1;
+
+      const vec = {
+        up: [0, -1],
+        down: [0, 1],
+        left: [-1, 0],
+        right: [1, 0]
+      }[dir || currentDir];
+
+      projectiles.push({
+        x: snake[0].x + vec[0],
+        y: snake[0].y + vec[1],
+        dx: vec[0],
+        dy: vec[1],
+        life: 14
+      });
+
+      addFloatingText("💥 PEW!", snake[0].x, snake[0].y, "#38bdf8");
+      updateHUD();
+    }
+
+    function triggerManualShoot() {
+      fireWeapon(currentDir);
+    }
+
+    /* =========================================================================
+       DUAL-ENGINE SAFETY & LOOKAHEAD
+       ========================================================================= */
+
+    function getNeighbors(x, y) {
+      return [
+        { dir: "up", x, y: y - 1 },
+        { dir: "down", x, y: y + 1 },
+        { dir: "left", x: x - 1, y },
+        { dir: "right", x: x + 1, y }
+      ];
+    }
+
+    function isValid(x, y) {
+      return x >= grid.minX && x <= grid.maxX && y >= grid.minY && y <= grid.maxY;
+    }
+
+    function bfsPath(start, target, obstaclesSet) {
+      if (start.x === target.x && start.y === target.y) return [];
+      const startKey = `${start.x},${start.y}`;
+      const visited = new Set([startKey]);
+      const queue = [[start.x, start.y, []]];
+
+      while (queue.length > 0) {
+        const [cx, cy, path] = queue.shift();
+        if (cx === target.x && cy === target.y) return path;
+
+        for (const n of getNeighbors(cx, cy)) {
+          if (!isValid(n.x, n.y)) continue;
+          const k = `${n.x},${n.y}`;
+          if (visited.has(k)) continue;
+          if (obstaclesSet.has(k) && !(n.x === target.x && n.y === target.y)) continue;
+
+          visited.add(k);
+          queue.push([n.x, n.y, [...path, n.dir]]);
+        }
+      }
+      return null;
+    }
+
+    function floodFillSpace(start, obstaclesSet) {
+      const visited = new Set();
+      const queue = [start];
+      visited.add(`${start.x},${start.y}`);
+
+      while (queue.length > 0) {
+        const cur = queue.shift();
+        for (const n of getNeighbors(cur.x, cur.y)) {
+          if (!isValid(n.x, n.y)) continue;
+          const k = `${n.x},${n.y}`;
+          if (visited.has(k) || obstaclesSet.has(k)) continue;
+          visited.add(k);
+          queue.push({ x: n.x, y: n.y });
+        }
+      }
+      return visited.size;
+    }
+
+    function isSafeMove(nextHead, targetPos) {
+      // 1. Must be inside grid
+      if (!isValid(nextHead.x, nextHead.y)) return false;
+
+      // 2. Neck or body collision
+      const head = snake[0];
+      const neck = snake.length > 1 ? snake[1] : null;
+      if (neck && nextHead.x === neck.x && nextHead.y === neck.y) return false;
+
+      const bodySet = new Set();
+      for (let i = 0; i < snake.length - 1; i++) {
+        bodySet.add(`${snake[i].x},${snake[i].y}`);
+      }
+      if (bodySet.has(`${nextHead.x},${nextHead.y}`)) return false;
+
+      // 3. Enemy collision is dangerous if not attacking
+      if (enemies.some(e => e.x === nextHead.x && e.y === nextHead.y)) return false;
+
+      // 4. Space evaluation
+      const space = floodFillSpace(nextHead, bodySet);
+      const tail = snake[snake.length - 1];
+      const tailPath = bfsPath(nextHead, tail, bodySet);
+
+      if (tailPath !== null) return true;
+      if (space >= snake.length + 2) return true;
+      return false;
+    }
+
+    /* =========================================================================
+       MAIN TELEMETRY & LAYA API INTEGRATION
+       ========================================================================= */
+
+    async function evaluateLayaDecision() {
+      if (isRequestInProgress) return;
+      isRequestInProgress = true;
+
+      const head = snake[0];
+      const targetPos = items.food || { x: 5, y: 5 };
+
+      // Line of sight check to nearest enemy
+      let enemyInLOS = false;
+      let losDir = "none";
+      let closestEnemy = null;
+      let minEnemyDist = 999;
+
+      for (const e of enemies) {
+        const d = Math.abs(e.x - head.x) + Math.abs(e.y - head.y);
+        if (d < minEnemyDist) {
+          minEnemyDist = d;
+          closestEnemy = { pos: [e.x, e.y], dist: d };
+        }
+        if (e.x === head.x) {
+          losDir = (e.y < head.y) ? "up" : "down";
+          enemyInLOS = true;
+        } else if (e.y === head.y) {
+          losDir = (e.x < head.x) ? "left" : "right";
+          enemyInLOS = true;
+        }
+      }
+
+      // Threat Level Assessment
+      const threatText = document.getElementById("threat-text");
+      const threatBadge = document.getElementById("hud-threat");
+      threatBadge.className = "threat-badge";
+      if (stats.hp === 1 || minEnemyDist <= 2) {
+        threatBadge.classList.add("threat-critical");
+        threatText.textContent = "CRITICAL THREAT";
+      } else if (minEnemyDist <= 5) {
+        threatBadge.classList.add("threat-combat");
+        threatText.textContent = "HOSTILE COMBAT";
+      } else {
+        threatBadge.classList.add("threat-recon");
+        threatText.textContent = "SECURE RECON";
+      }
+
+      // Move analysis for 4 directions
+      const moveAnalysis = {};
+      const safeMoves = [];
+      const neck = snake.length > 1 ? snake[1] : null;
+
+      for (const d of ["up", "down", "left", "right"]) {
+        const vec = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[d];
+        const nx = head.x + vec[0];
+        const ny = head.y + vec[1];
+
+        const isWall = !isValid(nx, ny);
+        const isNeck = neck && nx === neck.x && ny === neck.y;
+        const isBody = snake.slice(0, -1).some(s => s.x === nx && s.y === ny);
+        const isEnemy = enemies.some(e => e.x === nx && e.y === ny);
+        const safe = isSafeMove({ x: nx, y: ny }, targetPos);
+
+        let reason = "safe";
+        if (isWall) reason = "wall";
+        else if (isNeck) reason = "neck";
+        else if (isBody) reason = "body";
+        else if (isEnemy) reason = "enemy";
+        else if (!safe) reason = "trap";
+
+        moveAnalysis[d] = {
+          nx, ny,
+          safe,
+          isPhysicallyFree: !isWall && !isNeck && !isBody,
+          has_enemy: isEnemy,
+          reason,
+          open_space: floodFillSpace({ x: nx, y: ny }, new Set(snake.map(s => `${s.x},${s.y}`)))
+        };
+
+        if (safe) safeMoves.push(d);
+      }
+
+      // Recommend safest direction towards current tactical objective
+      let recommendedDir = safeMoves[0] || "right";
+      const pathToTarget = bfsPath(head, targetPos, new Set(snake.map(s => `${s.x},${s.y}`)));
+      if (pathToTarget && pathToTarget.length > 0 && safeMoves.includes(pathToTarget[0])) {
+        recommendedDir = pathToTarget[0];
+      }
+
+      // Build payload for Laya
+      const payload = {
+        model: "laya",
+        state: {
+          grid: {
+            cols: getGridCols(),
+            rows: getGridRows(),
+            min_x: grid.minX,
+            max_x: grid.maxX,
+            min_y: grid.minY,
+            max_y: grid.maxY
+          },
+          hp: stats.hp,
+          max_hp: stats.maxHp,
+          ammo: stats.ammo,
+          mana: stats.mana,
+          head: [head.x, head.y],
+          body: snake.map(s => [s.x, s.y]),
+          snake_length: snake.length,
+          food: [targetPos.x, targetPos.y],
+          enemies: enemies.map(e => ({ id: e.id, pos: [e.x, e.y], dist: Math.abs(e.x - head.x) + Math.abs(e.y - head.y) })),
+          closest_enemy: closestEnemy,
+          enemy_in_line_of_sight: enemyInLOS,
+          los_direction: losDir,
+          can_expand_grid: (stats.mana >= 50 && (head.x === grid.minX || head.x === grid.maxX || head.y === grid.minY || head.y === grid.maxY)),
+          recommended_expand_side: "left",
+          items: {
+            has_heart: !!items.heart,
+            has_ammo: !!items.ammo,
+            has_gift: !!items.gift
+          },
+          safe_moves: safeMoves,
+          recommended_safe_move: recommendedDir,
+          move_analysis: moveAnalysis
+        },
+        questions: {
+          tactical_action: { type: "choice" },
+          move: { type: "choice" }
+        }
+      };
+
+      try {
+        const t0 = performance.now();
+        const res = await fetch(`${SERVER_URL}/v1/systemone`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const latency = Math.round(performance.now() - t0);
+
+        document.getElementById("latency-tag").textContent = `${data.latency_ms || latency} ms`;
+        document.getElementById("telemetry-step").textContent = `Step ${stepCount}`;
+        document.getElementById("live-json").textContent = JSON.stringify(data, null, 2);
+
+        // Process Tactical Decision
+        if (data.answers && data.answers.tactical_action) {
+          renderTacticalMatrix(data.answers.tactical_action);
+          const act = data.answers.tactical_action.choice;
+          if (act === "shoot" && enemyInLOS && stats.ammo > 0) {
+            fireWeapon(losDir);
+          } else if (act === "cast_grid_expansion" && stats.mana >= 50) {
+            expandGrid("left");
+          }
+        }
+
+        // Process Movement Decision
+        let chosenMove = recommendedDir;
+        if (data.answers && data.answers.move) {
+          renderDirectionBars(data.answers.move);
+          const modelMove = data.answers.move.choice;
+          // Apply safety guard
+          if (safeMoves.includes(modelMove)) {
+            chosenMove = modelMove;
+          } else {
+            chosenMove = recommendedDir;
+          }
+        }
+
+        currentDir = chosenMove;
+      } catch (err) {
+        console.warn("Laya fallback step:", err);
+        currentDir = recommendedDir;
+      } finally {
+        isRequestInProgress = false;
+      }
+    }
+
+    function renderTacticalMatrix(tacticalData) {
+      const container = document.getElementById("tactical-matrix");
+      document.getElementById("tactical-choice-tag").textContent = tacticalData.choice.toUpperCase();
+      container.innerHTML = "";
+
+      const icons = {
+        shoot: "💥 DISCHARGE LASER",
+        evade_and_heal: "🛡 EVADE & HEAL",
+        cast_grid_expansion: "🌀 WARP GRID",
+        gather_ammo: "⚡ GATHER AMMO",
+        hunt_food: "🍎 HARVEST BIOMASS"
+      };
+
+      const colors = {
+        shoot: "var(--accent-red)",
+        evade_and_heal: "var(--accent-green)",
+        cast_grid_expansion: "var(--accent-purple)",
+        gather_ammo: "var(--accent-amber)",
+        hunt_food: "var(--accent-cyan)"
+      };
+
+      const probs = tacticalData.probabilities || {};
+      for (const [key, p] of Object.entries(probs)) {
+        const pct = Math.round(p * 100);
+        const row = document.createElement("div");
+        row.className = "matrix-row";
+        row.innerHTML = `
+          <div class="matrix-meta">
+            <span class="matrix-title">${icons[key] || key}</span>
+            <span style="font-weight:700;color:${colors[key] || '#fff'};">${pct}%</span>
+          </div>
+          <div class="matrix-bar-wrap">
+            <div class="matrix-bar-fill" style="width:${pct}%;background:${colors[key] || 'var(--accent-cyan)'};"></div>
+          </div>
+        `;
+        container.appendChild(row);
+      }
+    }
+
+    function renderDirectionBars(moveData) {
+      const probs = moveData.probabilities || {};
+      const chosen = moveData.choice;
+
+      for (const d of ["up", "down", "left", "right"]) {
+        const pct = Math.round((probs[d] || 0) * 100);
+        document.getElementById(`p-${d}`).textContent = `${pct}%`;
+        document.getElementById(`bar-${d}`).style.width = `${pct}%`;
+        document.getElementById(`dir-card-${d}`).classList.toggle("chosen", d === chosen);
+      }
+    }
+
+    /* =========================================================================
+       GAME TICK & PHYSICS SIMULATION
+       ========================================================================= */
+
+    function tick() {
+      stepCount++;
+
+      // 1. Move Projectiles
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i];
+        p.x += p.dx;
+        p.y += p.dy;
+        p.life -= 1;
+
+        // Check collision with enemies
+        let hit = false;
+        for (let j = enemies.length - 1; j >= 0; j--) {
+          const e = enemies[j];
+          if (e.x === p.x && e.y === p.y) {
+            hit = true;
+            enemies.splice(j, 1);
+            stats.score += 200;
+            addFloatingText("🎯 TARGET VAPORIZED! +200", p.x, p.y, "#f43f5e");
+            spawnParticles(p.x, p.y, "#f43f5e", 24);
+
+            // 50% chance to drop Ammo or Heart
+            if (Math.random() < 0.5 && !items.ammo) {
+              items.ammo = { x: p.x, y: p.y };
+            } else if (stats.hp < 3 && !items.heart) {
+              items.heart = { x: p.x, y: p.y };
+            }
+            break;
+          }
+        }
+
+        if (hit || p.life <= 0 || !isValid(p.x, p.y)) {
+          projectiles.splice(i, 1);
+        }
+      }
+
+      // 2. Move Enemies (if not frozen)
+      if (stats.freezeTimer > 0) {
+        stats.freezeTimer--;
+      } else {
+        enemySpawnCounter++;
+        if (enemySpawnCounter % 2 === 0) {
+          for (const e of enemies) {
+            // Chase snake head
+            const dx = Math.sign(snake[0].x - e.x);
+            const dy = Math.sign(snake[0].y - e.y);
+            const moveAxis = Math.random() < 0.5 ? 'x' : 'y';
+
+            let nx = e.x, ny = e.y;
+            if (moveAxis === 'x' && dx !== 0) nx += dx;
+            else if (dy !== 0) ny += dy;
+            else if (dx !== 0) nx += dx;
+
+            if (isValid(nx, ny) && !isOccupied(nx, ny)) {
+              e.x = nx;
+              e.y = ny;
+            }
+
+            // Check collision with snake head or body
+            if (snake.some(s => s.x === e.x && s.y === e.y)) {
+              stats.hp -= 1;
+              addFloatingText("💥 HULL BREACH! -1 HP", snake[0].x, snake[0].y, "#f43f5e");
+              spawnParticles(e.x, e.y, "#f43f5e", 15);
+              document.getElementById("main-container").classList.add("shake");
+              setTimeout(() => document.getElementById("main-container").classList.remove("shake"), 300);
+
+              // Remove enemy on collision
+              enemies = enemies.filter(en => en !== e);
+              updateHUD();
+
+              if (stats.hp <= 0) {
+                gameOver();
+                return;
+              }
+            }
+          }
+        }
+
+        // Spawn periodic enemies
+        if (gameMode === 'battle' && enemySpawnCounter % 35 === 0) {
+          spawnEnemy();
+        }
+      }
+
+      // 3. Move Snake
+      const vec = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[currentDir];
+      const newHead = { x: snake[0].x + vec[0], y: snake[0].y + vec[1] };
+
+      // Perimeter crash guard
+      if (!isValid(newHead.x, newHead.y)) {
+        gameOver();
+        return;
+      }
+
+      // Self-collision guard
+      if (snake.slice(0, -1).some(s => s.x === newHead.x && s.y === newHead.y)) {
+        gameOver();
+        return;
+      }
+
+      snake.unshift(newHead);
+
+      // Check Collectibles
+      let ate = false;
+
+      // 🍎 Food
+      if (items.food && newHead.x === items.food.x && newHead.y === items.food.y) {
+        ate = true;
+        stats.score += 100;
+        stats.mana = Math.min(100, stats.mana + 15);
+        addFloatingText("+100 FOOD", newHead.x, newHead.y, "#10b981");
+        spawnParticles(newHead.x, newHead.y, "#10b981", 10);
+        items.food = spawnFreeCell();
+
+        // 30% chance to spawn an ammo crate or mystery gift
+        if (gameMode === 'battle' && Math.random() < 0.35 && !items.ammo) {
+          items.ammo = spawnFreeCell();
+        } else if (gameMode === 'battle' && Math.random() < 0.25 && !items.gift) {
+          items.gift = spawnFreeCell();
+        }
+      }
+
+      // ⚡ Ammo
+      if (items.ammo && newHead.x === items.ammo.x && newHead.y === items.ammo.y) {
+        stats.ammo += 3;
+        stats.score += 50;
+        addFloatingText("+3 AMMO ⚡", newHead.x, newHead.y, "#38bdf8");
+        spawnParticles(newHead.x, newHead.y, "#38bdf8", 12);
+        items.ammo = null;
+      }
+
+      // ❤️ Heart
+      if (items.heart && newHead.x === items.heart.x && newHead.y === items.heart.y) {
+        stats.hp = Math.min(stats.maxHp, stats.hp + 1);
+        addFloatingText("+1 HP ❤️", newHead.x, newHead.y, "#ec4899");
+        spawnParticles(newHead.x, newHead.y, "#ec4899", 15);
+        items.heart = null;
+      }
+
+      // 🎁 Mystery Gift
+      if (items.gift && newHead.x === items.gift.x && newHead.y === items.gift.y) {
+        stats.freezeTimer = 40; // EMP Freeze
+        stats.mana = 100;
+        stats.score += 300;
+        addFloatingText("🎁 EMP FREEZE ACTIVATED!", newHead.x, newHead.y, "#a855f7");
+        spawnParticles(newHead.x, newHead.y, "#a855f7", 20);
+        items.gift = null;
+      }
+
+      if (!ate) {
+        snake.pop();
+      }
+
+      // Update Mana passively
+      if (stats.mana < 100 && stepCount % 5 === 0) {
+        stats.mana = Math.min(100, stats.mana + 1);
+      }
+
+      updateHUD();
+      render();
+    }
+
+    function gameOver() {
+      isRunning = false;
+      document.getElementById("btn-start").textContent = "💀 Game Over (Restart)";
+      document.getElementById("btn-start").style.background = "#f43f5e";
+      addFloatingText("💀 MISSION FAILED", snake[0].x, snake[0].y, "#f43f5e");
+    }
+
+    function updateHUD() {
+      // Hearts
+      const heartsStr = "❤️".repeat(Math.max(0, stats.hp)) + "🖤".repeat(Math.max(0, stats.maxHp - stats.hp));
+      document.getElementById("hud-hearts").textContent = heartsStr;
+
+      // Ammo & Mana
+      document.getElementById("hud-ammo").textContent = `⚡ ${stats.ammo}`;
+      document.getElementById("hud-mana").textContent = `${stats.mana}%`;
+      document.getElementById("hud-score").textContent = stats.score;
+
+      // Button states
+      document.getElementById("btn-shoot").disabled = (stats.ammo <= 0);
+      document.getElementById("btn-warp").disabled = (stats.mana < 50);
+    }
+
+    /* =========================================================================
+       RENDERER & VISUAL FX
+       ========================================================================= */
+
+    function spawnParticles(gridX, gridY, color, count = 12) {
+      const cols = getGridCols();
+      const rows = getGridRows();
+      const cellSize = CANVAS.width / Math.max(cols, rows);
+      const px = (gridX - grid.minX) * cellSize + cellSize / 2;
+      const py = (gridY - grid.minY) * cellSize + cellSize / 2;
+
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = 1.5 + Math.random() * 4;
+        particles.push({
+          x: px,
+          y: py,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          color,
+          life: 18 + Math.floor(Math.random() * 12),
+          maxLife: 30
+        });
+      }
+    }
+
+    function addFloatingText(text, gridX, gridY, color = "#fff") {
+      const cols = getGridCols();
+      const rows = getGridRows();
+      const cellSize = CANVAS.width / Math.max(cols, rows);
+      const px = (gridX - grid.minX) * cellSize + cellSize / 2;
+      const py = (gridY - grid.minY) * cellSize + cellSize / 2;
+
+      floatingTexts.push({
+        text,
+        x: px,
+        y: py,
+        color,
+        alpha: 1.0,
+        vy: -1.2
+      });
+    }
+
+    function render() {
+      const cols = getGridCols();
+      const rows = getGridRows();
+      const cellSize = CANVAS.width / Math.max(cols, rows);
+
+      CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
+
+      // 1. Draw Grid Canvas Background & Subtle Grid Lines
+      CTX.fillStyle = "#030712";
+      CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+
+      CTX.strokeStyle = "rgba(56, 189, 248, 0.08)";
+      CTX.lineWidth = 1;
+      for (let x = 0; x <= cols; x++) {
+        CTX.beginPath();
+        CTX.moveTo(x * cellSize, 0);
+        CTX.lineTo(x * cellSize, rows * cellSize);
+        CTX.stroke();
+      }
+      for (let y = 0; y <= rows; y++) {
+        CTX.beginPath();
+        CTX.moveTo(0, y * cellSize);
+        CTX.lineTo(cols * cellSize, y * cellSize);
+        CTX.stroke();
+      }
+
+      // Draw Outer Quantum Perimeter Boundary
+      CTX.strokeStyle = (stats.hp === 1) ? "rgba(244, 63, 94, 0.7)" : "rgba(6, 182, 212, 0.5)";
+      CTX.lineWidth = 2;
+      CTX.strokeRect(0, 0, cols * cellSize, rows * cellSize);
+
+      // Helper to map grid (x, y) to canvas (px, py)
+      function toPx(gx, gy) {
+        return {
+          x: (gx - grid.minX) * cellSize,
+          y: (gy - grid.minY) * cellSize
+        };
+      }
+
+      // 2. Draw Collectibles
+      // 🍎 Food (Apple)
+      if (items.food) {
+        const p = toPx(items.food.x, items.food.y);
+        CTX.fillStyle = "#ef4444";
+        CTX.shadowColor = "#ef4444";
+        CTX.shadowBlur = 12;
+        CTX.beginPath();
+        CTX.arc(p.x + cellSize / 2, p.y + cellSize / 2, cellSize * 0.38, 0, Math.PI * 2);
+        CTX.fill();
+        CTX.shadowBlur = 0;
+      }
+
+      // ⚡ Ammo Pack
+      if (items.ammo) {
+        const p = toPx(items.ammo.x, items.ammo.y);
+        CTX.fillStyle = "#38bdf8";
+        CTX.shadowColor = "#38bdf8";
+        CTX.shadowBlur = 10;
+        CTX.fillRect(p.x + cellSize * 0.2, p.y + cellSize * 0.2, cellSize * 0.6, cellSize * 0.6);
+        CTX.fillStyle = "#fff";
+        CTX.font = `bold ${Math.floor(cellSize * 0.5)}px sans-serif`;
+        CTX.textAlign = "center";
+        CTX.textBaseline = "middle";
+        CTX.fillText("⚡", p.x + cellSize / 2, p.y + cellSize / 2);
+        CTX.shadowBlur = 0;
+      }
+
+      // ❤️ Heart Pack
+      if (items.heart) {
+        const p = toPx(items.heart.x, items.heart.y);
+        CTX.font = `${Math.floor(cellSize * 0.7)}px sans-serif`;
+        CTX.textAlign = "center";
+        CTX.textBaseline = "middle";
+        CTX.fillText("❤️", p.x + cellSize / 2, p.y + cellSize / 2);
+      }
+
+      // 🎁 Mystery Gift
+      if (items.gift) {
+        const p = toPx(items.gift.x, items.gift.y);
+        CTX.font = `${Math.floor(cellSize * 0.7)}px sans-serif`;
+        CTX.textAlign = "center";
+        CTX.textBaseline = "middle";
+        CTX.fillText("🎁", p.x + cellSize / 2, p.y + cellSize / 2);
+      }
+
+      // 3. Draw Enemies (Drones)
+      for (const e of enemies) {
+        const p = toPx(e.x, e.y);
+        CTX.fillStyle = e.color;
+        CTX.shadowColor = e.color;
+        CTX.shadowBlur = 14;
+
+        // Draw diamond/drone shape
+        CTX.beginPath();
+        CTX.moveTo(p.x + cellSize / 2, p.y + cellSize * 0.1);
+        CTX.lineTo(p.x + cellSize * 0.9, p.y + cellSize / 2);
+        CTX.lineTo(p.x + cellSize / 2, p.y + cellSize * 0.9);
+        CTX.lineTo(p.x + cellSize * 0.1, p.y + cellSize / 2);
+        CTX.closePath();
+        CTX.fill();
+
+        // Eye / Core
+        CTX.fillStyle = "#fff";
+        CTX.beginPath();
+        CTX.arc(p.x + cellSize / 2, p.y + cellSize / 2, cellSize * 0.18, 0, Math.PI * 2);
+        CTX.fill();
+        CTX.shadowBlur = 0;
+      }
+
+      // 4. Draw Projectiles
+      for (const pr of projectiles) {
+        const p = toPx(pr.x, pr.y);
+        CTX.fillStyle = "#38bdf8";
+        CTX.shadowColor = "#38bdf8";
+        CTX.shadowBlur = 16;
+        CTX.beginPath();
+        CTX.arc(p.x + cellSize / 2, p.y + cellSize / 2, cellSize * 0.25, 0, Math.PI * 2);
+        CTX.fill();
+        CTX.shadowBlur = 0;
+      }
+
+      // 5. Draw Snake Body & Head
+      for (let i = snake.length - 1; i >= 0; i--) {
+        const s = snake[i];
+        const p = toPx(s.x, s.y);
+        const isHead = (i === 0);
+
+        if (isHead) {
+          CTX.fillStyle = "#10b981";
+          CTX.shadowColor = "#10b981";
+          CTX.shadowBlur = 12;
+          CTX.beginPath();
+          CTX.roundRect(p.x + 2, p.y + 2, cellSize - 4, cellSize - 4, 6);
+          CTX.fill();
+
+          // Cyber Eyes
+          CTX.fillStyle = "#022013";
+          const eyeOffset = cellSize * 0.28;
+          CTX.beginPath();
+          CTX.arc(p.x + eyeOffset, p.y + eyeOffset, cellSize * 0.12, 0, Math.PI * 2);
+          CTX.arc(p.x + cellSize - eyeOffset, p.y + eyeOffset, cellSize * 0.12, 0, Math.PI * 2);
+          CTX.fill();
+          CTX.shadowBlur = 0;
+        } else {
+          // Body gradient
+          const factor = i / snake.length;
+          CTX.fillStyle = `hsl(${160 - factor * 20}, 75%, ${45 - factor * 10}%)`;
+          CTX.beginPath();
+          CTX.roundRect(p.x + 3, p.y + 3, cellSize - 6, cellSize - 6, 4);
+          CTX.fill();
+        }
+      }
+
+      // 6. Draw Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const pt = particles[i];
+        pt.x += pt.vx;
+        pt.y += pt.vy;
+        pt.life--;
+
+        const alpha = Math.max(0, pt.life / pt.maxLife);
+        CTX.fillStyle = pt.color;
+        CTX.globalAlpha = alpha;
+        CTX.beginPath();
+        CTX.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
+        CTX.fill();
+        CTX.globalAlpha = 1.0;
+
+        if (pt.life <= 0) particles.splice(i, 1);
+      }
+
+      // 7. Draw Floating Combat Texts
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.y += ft.vy;
+        ft.alpha -= 0.03;
+
+        CTX.fillStyle = ft.color;
+        CTX.globalAlpha = Math.max(0, ft.alpha);
+        CTX.font = "bold 12px 'JetBrains Mono', monospace";
+        CTX.textAlign = "center";
+        CTX.fillText(ft.text, ft.x, ft.y);
+        CTX.globalAlpha = 1.0;
+
+        if (ft.alpha <= 0) floatingTexts.splice(i, 1);
+      }
+    }
+
+    /* =========================================================================
+       GAME LOOP & EVENT LISTENERS
+       ========================================================================= */
+
+    async function gameLoop() {
+      if (!isRunning) return;
+
+      await evaluateLayaDecision();
+      tick();
+
+      if (isRunning) {
+        if (tickSpeedMs === 0) {
+          // Turbo Mode
+          setTimeout(gameLoop, 0);
+        } else {
+          setTimeout(gameLoop, tickSpeedMs);
+        }
+      }
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener("keydown", e => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        triggerManualShoot();
+      } else if (e.code === "KeyE") {
+        e.preventDefault();
+        triggerManualWarp();
+      } else if (e.code === "KeyP") {
+        toggleGame();
+      } else if (e.code === "ArrowUp" || e.code === "KeyW") {
+        currentDir = "up";
+      } else if (e.code === "ArrowDown" || e.code === "KeyS") {
+        currentDir = "down";
+      } else if (e.code === "ArrowLeft" || e.code === "KeyA") {
+        currentDir = "left";
+      } else if (e.code === "ArrowRight" || e.code === "KeyD") {
+        currentDir = "right";
+      }
     });
-    const ms = Math.round(performance.now() - t0);
-    const data = await resp.json();
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    sandboxFallback = false;
-    return { data, ms };
-  } catch (err) {
-    const ms = Math.max(11, Math.round(performance.now() - t0));
-    sandboxFallback = true;
-    return { data: simulateSystemOne(state), ms };
-  }
-}
 
-function setStatus(text, kind) {
-  $("status-text").textContent = text;
-  $("dot").className = "dot" + (kind ? " " + kind : "");
-}
-
-function renderJson(state, finalChoice, probs) {
-  const safeList = (state.safe_moves || []).map(m => `<span class="j-str">"${m}"</span>`).join(", ");
-  const conf = (probs[finalChoice] || 0).toFixed(3);
-  const stratName = state.strategy === "hunt" ? "hunt (direct)" : "survive (tail-chase)";
-  $("live-json").innerHTML =
-`{
-  <span class="j-key">"strategy"</span>: <span class="j-str">"${stratName}"</span>,
-  <span class="j-key">"lookahead"</span>: <span class="j-str">"1000+ steps (Direct Hunt & Lookahead Survival)"</span>,
-  <span class="j-key">"state"</span>: {
-    <span class="j-key">"head"</span>: [<span class="j-num">${state.head[0]}</span>, <span class="j-num">${state.head[1]}</span>], <span class="j-key">"food"</span>: [<span class="j-num">${state.food[0]}</span>, <span class="j-num">${state.food[1]}</span>],
-    <span class="j-key">"length"</span>: <span class="j-num">${state.snake_length}</span>, <span class="j-key">"body_cells"</span>: <span class="j-num">${state.body.length}</span>,
-    <span class="j-key">"safe_moves"</span>: [${safeList}]
-  },
-  <span class="j-key">"move"</span>: { <span class="j-key">"choice"</span>: <span class="j-str">"${finalChoice}"</span>, <span class="j-key">"confidence"</span>: <span class="j-num">${conf}</span> }
-}`;
-}
-
-function updateUI(state, probs, finalChoice, ms) {
-  $("m-score").textContent = String(score);
-  $("m-steps").textContent = String(steps);
-  if ($("m-fill")) $("m-fill").textContent = `${snake.length}/144`;
-  if ($("m-lookahead")) $("m-lookahead").textContent = "1000+";
-  $("m-ms").textContent = `${ms} ms`;
-
-  const [hx, hy] = state.head;
-  const [fx, fy] = state.food;
-  $("coords-text").textContent = `head [${hx},${hy}] · food [${fx},${fy}]`;
-
-  const chosenPct = ((probs[finalChoice] || 0) * 100).toFixed(1) + "%";
-  const stratTag = state.strategy === "hunt" ? "🎯 Hunt (Direct)" : "🛡 Survive (Tail-Chase)";
-  $("choice-badge").textContent = `choice: ${finalChoice} (${chosenPct}) · ${stratTag}`;
-
-  for (const d of DIRS) {
-    const p = Math.max(0, Math.min(1, Number(probs[d] || 0)));
-    const pct = (p * 100).toFixed(1) + "%";
-    const info = state.move_analysis[d];
-    const isSelected = d === finalChoice;
-
-    $("name-" + d).className = "dir-name" + (isSelected ? " chosen" : "");
-    $("name-" + d).textContent = `${ARROWS[d]} ${d}`;
-
-    const safeEl = $("safe-" + d);
-    safeEl.textContent = info.safe ? "safe" : info.reason;
-    safeEl.className = "safety-tag" + (info.safe ? "" : " blocked");
-
-    const barEl = $("bar-" + d);
-    barEl.style.width = (p * 100).toFixed(1) + "%";
-    barEl.className = "bar-fill" + (isSelected ? " chosen" : "");
-
-    $("val-" + d).className = "prob-pct" + (isSelected ? "" : " dim");
-    $("val-" + d).textContent = pct;
-  }
-
-  renderJson(state, finalChoice, probs);
-}
-
-function drawBoard() {
-  const canvas = $("board");
-  const dpr = window.devicePixelRatio || 1;
-  const targetW = Math.round(CSS_SIZE * dpr);
-  if (canvas.width !== targetW || canvas.height !== targetW) {
-    canvas.width = targetW;
-    canvas.height = targetW;
-  }
-  const ctx = canvas.getContext("2d");
-  ctx.save();
-  ctx.scale(dpr, dpr);
-
-  const W = CSS_SIZE;
-  const H = CSS_SIZE;
-  const cell = W / GRID;
-
-  ctx.fillStyle = "#f8fafc";
-  ctx.fillRect(0, 0, W, H);
-
-  // Faint grid lines
-  ctx.strokeStyle = "#e2e8f0";
-  ctx.lineWidth = 1;
-  for (let i = 1; i < GRID; i++) {
-    const p = Math.floor(i * cell) + 0.5;
-    ctx.beginPath();
-    ctx.moveTo(p, 0);
-    ctx.lineTo(p, H);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(0, p);
-    ctx.lineTo(W, p);
-    ctx.stroke();
-  }
-
-  // Optional Hamiltonian Cycle Visualization
-  const showCycle = $("chk-cycle") && $("chk-cycle").checked;
-  if (showCycle && H_CYCLE && H_CYCLE.path) {
-    ctx.strokeStyle = "rgba(59, 130, 246, 0.20)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let i = 0; i < H_CYCLE.path.length; i++) {
-      const [cx, cy] = H_CYCLE.path[i];
-      const px = (cx + 0.5) * cell;
-      const py = (cy + 0.5) * cell;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-    ctx.stroke();
-  }
-
-  // Target food
-  if (food) {
-    const [fx, fy] = food;
-    const fcx = (fx + 0.5) * cell;
-    const fcy = (fy + 0.5) * cell;
-    ctx.fillStyle = "#16a34a";
-    ctx.beginPath();
-    ctx.arc(fcx, fcy, cell * 0.28, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Snake segments
-  for (let i = snake.length - 1; i >= 0; i--) {
-    const [sx, sy] = snake[i];
-    const isHead = i === 0;
-    ctx.fillStyle = isHead ? "#0969da" : "#3b82f6";
-    ctx.globalAlpha = isHead ? 1.0 : Math.max(0.45, 0.9 - (i / (snake.length + 5)) * 0.45);
-    const pad = isHead ? cell * 0.09 : cell * 0.14;
-    ctx.beginPath();
-    ctx.roundRect(sx * cell + pad, sy * cell + pad, cell - pad * 2, cell - pad * 2, isHead ? 5 : 4);
-    ctx.fill();
-
-    if (isHead) {
-      ctx.globalAlpha = 1.0;
-      ctx.fillStyle = "#ffffff";
-      const [vx, vy] = VEC[direction] || [1, 0];
-      const hcx = (sx + 0.5) * cell;
-      const hcy = (sy + 0.5) * cell;
-      const fwd = cell * 0.16;
-      const side = cell * 0.13;
-      const px = -vy, py = vx;
-      ctx.beginPath();
-      ctx.arc(hcx + vx * fwd + px * side, hcy + vy * fwd + py * side, 1.8, 0, Math.PI * 2);
-      ctx.arc(hcx + vx * fwd - px * side, hcy + vy * fwd - py * side, 1.8, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  ctx.restore();
-}
-
-function applyMove(chosenDir) {
-  const [hx, hy] = snake[0];
-  const [vx, vy] = VEC[chosenDir];
-  const nx = hx + vx;
-  const ny = hy + vy;
-  const bodyObstacles = new Set(snake.slice(0, -1).map(([x, y]) => x + "," + y));
-
-  if (nx < 0 || nx >= GRID || ny < 0 || ny >= GRID || bodyObstacles.has(nx + "," + ny)) {
-    alive = false;
-    running = false;
-    $("btn-start").textContent = "Start";
-    setStatus("Collision", "err");
-    drawBoard();
-    return;
-  }
-
-  snake.unshift([nx, ny]);
-  direction = chosenDir;
-  if (food && nx === food[0] && ny === food[1]) {
-    score += 1;
-    food = spawnFood(snake);
-    if (!food) {
-      alive = true;
-      running = false;
-      $("btn-start").textContent = "Start";
-      setStatus("Victory! Grid Full (140/140)", "live");
-      drawBoard();
-      return;
-    }
-  } else {
-    snake.pop();
-  }
-  steps += 1;
-}
-
-function resetGame() {
-  running = false;
-  $("btn-start").textContent = "Start";
-  snake = [[5, 6], [4, 6], [3, 6], [2, 6]];
-  direction = "right";
-  nextChoice = "right";
-  score = 0;
-  steps = 0;
-  alive = true;
-  food = spawnFood(snake);
-  setStatus("Idle", "");
-  const st = buildState();
-  updateUI(st, { up: 0.25, down: 0.25, left: 0.0, right: 0.50 }, "right", 0);
-  drawBoard();
-}
-
-async function stepOnce() {
-  if (inflight || !alive) return;
-  inflight = true;
-  const state = buildState();
-  const { data, ms } = await requestDecision(state);
-  const moveAns = (data.answers && data.answers.move) || {};
-  const probs = moveAns.probabilities || { up: 0.25, down: 0.25, left: 0.25, right: 0.25 };
-  const rawChoice = moveAns.choice || DIRS.reduce((a, b) => (probs[a] >= probs[b] ? a : b));
-
-  let finalChoice = rawChoice;
-  if (state.safe_moves && state.safe_moves.length > 0 && !state.safe_moves.includes(rawChoice)) {
-    finalChoice = state.safe_moves.reduce((a, b) => ((probs[a] || 0) >= (probs[b] || 0) ? a : b));
-  }
-
-  // Hard physical safety guard: Never step into a wall or neck if ANY physically free cell exists
-  const freeChoices = DIRS.filter(d => state.move_analysis[d] && state.move_analysis[d].isPhysicallyFree);
-  if (freeChoices.length > 0 && !freeChoices.includes(finalChoice)) {
-    const safeFree = freeChoices.filter(d => state.move_analysis[d].safe);
-    if (safeFree.length > 0) {
-      finalChoice = safeFree[0];
-    } else {
-      finalChoice = freeChoices[0];
-    }
-  }
-
-  nextChoice = finalChoice;
-
-  applyMove(finalChoice);
-  if (alive) {
-    setStatus(sandboxFallback ? "Running (sim)" : "Running (live)", "live");
-  }
-  updateUI(state, probs, finalChoice, ms);
-  drawBoard();
-  inflight = false;
-}
-
-async function loop() {
-  while (running && alive) {
-    const tStart = performance.now();
-    await stepOnce();
-    if (!running || !alive) break;
-    const speedMode = ($("speed-select") && $("speed-select").value) || "turbo";
-    let targetInterval = 0;
-    if (speedMode === "fast") targetInterval = 15;
-    else if (speedMode === "normal") targetInterval = 45;
-
-    if (targetInterval > 0) {
-      const elapsed = performance.now() - tStart;
-      const wait = Math.max(1, targetInterval - elapsed);
-      await new Promise(r => setTimeout(r, wait));
-    } else {
-      // In Turbo mode, execute next step with minimum event loop tick
-      await new Promise(r => setTimeout(r, 0));
-    }
-  }
-}
-
-$("btn-start").onclick = () => {
-  if (!alive) resetGame();
-  running = !running;
-  $("btn-start").textContent = running ? "Pause" : "Start";
-  if (running) {
-    loop();
-  } else {
-    setStatus("Paused", "");
-  }
-};
-
-$("btn-reset").onclick = () => resetGame();
-if ($("chk-cycle")) {
-  $("chk-cycle").onchange = () => drawBoard();
-}
-
-window.addEventListener("keydown", e => {
-  if (e.code === "Space") {
-    e.preventDefault();
-    $("btn-start").click();
-  } else if (e.key === "r" || e.key === "R") {
-    e.preventDefault();
+    // Boot
     resetGame();
-  }
-});
-
-resetGame();
-</script>
+  </script>
 </body>
 </html>

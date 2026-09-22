@@ -1,12 +1,12 @@
-# 🐍 Laya AI Snake - System 1 Autonomous Decision Engine
+# 🐍 Laya Cyber-Snake AI · Tactical Battle Arena
 
 <p align="center">
   <b><a href="README.md">🇬🇧 English</a></b> | <b><a href="README_FA.md">🇮🇷 فارسی</a></b>
 </p>
 
-An ultra-fast, intelligent, and mathematically calibrated **Snake AI** powered by the **Laya System 1 Decision Model** ([`convaiinnovations/laya`](https://huggingface.co/convaiinnovations/laya)) running locally on **NVIDIA GPU (CUDA)** via FastAPI.
+An ultra-fast, intelligent, and mathematically calibrated **Cyber-Snake Tactical Battle Arena** powered by the **Laya System 1 Decision Model** ([`convaiinnovations/laya`](https://huggingface.co/convaiinnovations/laya)) running locally on **NVIDIA GPU (CUDA)** via FastAPI.
 
-Featuring a **Dual-Engine Forward Virtual Lookahead System (1000+ Steps)** combined with the Laya System 1 Neural Decision Head to eliminate suicidal traps, wall collisions, and robotic circling while hunting apples at maximum throughput.
+Featuring a **Multi-Criteria Tactical Decision Engine** combined with **Forward Virtual Lookahead**, dynamic AI hostile drones, plasma projectile weapons, dimension-expansion abilities, and a rich multi-item combat ecosystem.
 
 ---
 
@@ -14,24 +14,32 @@ Featuring a **Dual-Engine Forward Virtual Lookahead System (1000+ Steps)** combi
 
 ![Laya AI Snake Gameplay](assets/laya_snake_gameplay.gif)
 
-> **Live Inference**: ~35-45 ms per move on NVIDIA GeForce RTX 4060 GPU with CUDA acceleration. Zero hallucination, non-autoregressive single forward-pass decision head.
+> **Live Inference**: ~35-65 ms per dual-decision pass (`tactical_action` + `move`) on NVIDIA GeForce RTX 4060 GPU with CUDA acceleration.
 
 ---
 
-## 🌟 Key Features
+## ⚔️ Tactical Battle Arena Features
 
-* **⚡ Ultra-Low Latency Inference**: Runs locally on your GPU using ModernBERT-large (421M parameters) with PyTorch `inference_mode` and automatic mixed precision (AMP).
-* **🧠 True Forward Lookahead (Dual-Engine System)**:
-  * **🎯 Safe Direct Hunt**: Computes the shortest BFS trajectory to the apple and performs a **Virtual Simulation** to ensure that after eating, the snake can still safely reach its own tail and has sufficient escape space.
-  * **🛡 Intelligent Tail-Chase Survival**: If eating the food would trap the snake, it seamlessly switches to survival mode, following its tail and maximizing open flood-fill space until an escape path clears.
-* **🚫 100% Trap & Wall Prevention**:
-  * Evaluates dead-end pockets in real time (`space < snake.length + 1 && !tailReachable`).
-  * Emits semantic hazard tags (`FATAL WALL`, `FATAL BODY`, `DEAD-END TRAP`) directly to Laya's decision head.
-  * Employs an absolute physical safety guard ensuring zero wall or neck collisions under any circumstances.
-* **📊 Real-Time Interactive Dashboard**:
-  * Live move probability bars with exact percentage scoring.
-  * Dynamic Strategy Badge (`🎯 Hunt (Direct)` vs `🛡 Survive (Tail-Chase)`).
-  * Real-time inspection of the `/v1/systemone` JSON payload, current head/food coordinates, snake length, and fill percentage.
+* **🛸 Hostile AI Drones (Dynamic Enemies)**:
+  * Autonomous drones spawn and patrol the arena, actively chasing the snake.
+  * Contact with an enemy deals 1 Hull Damage (reducing HP).
+* **💥 Plasma Projectile Weapon (Shooting System)**:
+  * When Ammo > 0, the snake can discharge high-velocity plasma laser bolts along its line of sight.
+  * Direct hits vaporize hostile drones in explosive particle bursts (+200 pts) and drop tactical supplies.
+* **🌀 Quantum Dimension Warp (Grid Expansion on Demand)**:
+  * When cornered against perimeter walls, the snake can cast a Warp Spell to dynamically **expand the grid by 1 column/row**, creating instant escape corridors and altering board geometry in real time.
+* **📦 4-Tier Collectibles Ecosystem**:
+  * 🍎 **Biomass Energy (Food)**: Lengthens the snake and adds base points.
+  * ⚡ **Ammo Cells**: Replenishes plasma munition (+3 rounds).
+  * ❤️ **Vitality Heart**: Restores +1 HP (max 3 HP) to survive combat damage.
+  * 🎁 **Mystery Tactical Crate**: Triggers perks like **EMP Drone Freeze** or instant 100% Warp charge.
+* **🧠 Multi-Faceted Laya System 1 Decision Head**:
+  * In every tick, Laya evaluates multiple decisions simultaneously in a single forward pass:
+    * `tactical_action`: `["shoot", "evade_and_heal", "cast_grid_expansion", "gather_ammo", "hunt_food"]`
+    * `move`: `["up", "down", "left", "right"]`
+    * `threat_level`: `["SECURE RECON", "HOSTILE COMBAT", "CRITICAL THREAT"]`
+* **🛡 Dual-Engine Spatial Safety**:
+  * Mathematical lookahead and flood-fill invariants guarantee zero suicidal wall or neck collisions under any circumstances.
 
 ---
 
@@ -39,31 +47,21 @@ Featuring a **Dual-Engine Forward Virtual Lookahead System (1000+ Steps)** combi
 
 ```mermaid
 graph TD
-    A[Browser Client: snake.html] -->|JSON State + Questions| B[FastAPI Server: server.py]
-    B -->|State Serialization + Semantic Criteria| C[Laya ModernBERT Head]
-    C -->|Calibrated Probabilities| B
-    B -->|Choice & Metrics| A
-    A -->|Apply Move| D[Canvas Board 12x12]
+    A[Browser Client: snake.html] -->|Combat State + Questions| B[FastAPI Server: server.py]
+    B -->|State Serialization + Semantic Tactical Criteria| C[Laya ModernBERT GPU Head]
+    C -->|Multi-Decision Distribution| B
+    B -->|Tactical Action + Direction| A
+    A -->|Apply Move & Weapon| D[Dynamic Battle Canvas]
 
-    subgraph Decision Engine
-      E[BFS Direct Path]
-      F[Virtual Snake Simulation]
-      G[Flood Fill Open Space]
-      H[Tail Reachability Invariant]
+    subgraph Dual-Engine Decision System
+      E[Line-of-Sight Laser Targeting]
+      F[Virtual Lookahead & Escape Proof]
+      G[Flood Fill Open Space Invariant]
+      H[Dynamic Dimension Grid Scaler]
     end
 
-    A <--> Decision Engine
+    A <--> Dual-Engine Decision System
 ```
-
-### Decision Flow:
-1. **Perception**: The client scans the 12×12 board, head coordinates, food position, and the full list of body segments.
-2. **Virtual Lookahead**:
-   - Shortest path to food is found using Breadth-First Search (BFS).
-   - A virtual clone of the snake steps through the trajectory to the apple.
-   - If after eating, the virtual head can reach the virtual tail with sufficient space, the hunt is certified **100% Safe**.
-3. **Hazard Tagging**: Directions leading outside the grid, into the neck, into body segments, or into inescapable pockets are marked with lethal crash criteria.
-4. **Laya System 1 Inference**: The ModernBERT model evaluates the state and criteria in a single 35ms pass, scoring the optimal move with high probability (~75-85%).
-5. **Action Execution**: The board updates smoothly at 15ms-45ms intervals or Turbo Mode.
 
 ---
 
@@ -71,10 +69,9 @@ graph TD
 
 ### Prerequisites
 * Windows, Linux, or macOS with **Python 3.10+**.
-* An NVIDIA GPU with CUDA support (or CPU with multi-threading).
-* The Laya model downloaded locally:
+* An NVIDIA GPU with CUDA support (or multi-threaded CPU).
+* Downloaded Laya model:
   ```bash
-  # Example target directory: C:\AI\Models\laya
   git clone https://huggingface.co/convaiinnovations/laya C:\AI\Models\laya
   ```
 
@@ -83,10 +80,9 @@ graph TD
 pip install -r requirements.txt
 ```
 
-### Step 2: Start the Laya Server
-Set the model path (if different from default `C:\AI\Models\laya`) and start `server.py`:
+### Step 2: Start the Tactical Server
 ```bash
-# Optional: specify custom path
+# Optional custom path
 set LAYA_MODEL_PATH=C:\AI\Models\laya
 
 # Run server
@@ -94,78 +90,76 @@ python -u server.py
 ```
 Or simply double-click **`start-game.bat`**.
 
-You should see:
-```text
-[*] Loading Laya model from: C:\AI\Models\laya
-[OK] Laya model successfully loaded on cuda (threads: 14)!
-[*] Starting server at http://localhost:8080
-[*] Open http://localhost:8080/snake in your browser to play!
-```
-
-### Step 3: Launch the Game
-Open your web browser and navigate to:
+### Step 3: Launch & Play
+Open your browser at:
 ```
 http://localhost:8080/snake
 ```
-Click **Start** and watch Laya play autonomously!
-
----
-
-## ⚙️ Speed Modes
-
-You can dynamically adjust the execution rate from the UI dropdown:
-* **⚡ Turbo (Max GPU)**: Zero delay event loop tick (`0ms`). Moves execute as fast as the GPU can process inferences (~25 moves/sec).
-* **🚀 Fast (15ms)**: Ideal for visual inspection with high responsiveness.
-* **⏱ Normal (45ms)**: Relaxed pacing for observing decision probabilities.
+* **Spacebar**: Discharge Plasma Laser
+* **E Key**: Cast Dimension Warp (+1 Col)
+* **P Key**: Pause / Resume
+* **Arrow Keys / WASD**: Manual control override
 
 ---
 
 ## 📡 API Specification (`/v1/systemone`)
 
-### Request
+### Multi-Question Combat Request
 `POST /v1/systemone`
 ```json
 {
   "model": "laya",
   "state": {
+    "grid": { "cols": 12, "rows": 12, "min_x": 0, "max_x": 11, "min_y": 0, "max_y": 11 },
+    "hp": 2,
+    "max_hp": 3,
+    "ammo": 3,
+    "mana": 100,
     "head": [5, 6],
-    "food": [7, 0],
-    "snake_length": 4,
     "body": [[5, 6], [4, 6], [3, 6], [2, 6]],
-    "strategy": "hunt",
+    "enemies": [{ "id": 1, "pos": [5, 3], "dist": 3 }],
+    "closest_enemy": { "pos": [5, 3], "dist": 3 },
+    "enemy_in_line_of_sight": true,
+    "los_direction": "up",
+    "can_expand_grid": true,
     "safe_moves": ["up", "down", "right"],
-    "recommended_safe_move": "up",
-    "move_analysis": {
-      "up": { "safe": true, "isPhysicallyFree": true, "reason": "safe", "open_space": 140 },
-      "down": { "safe": true, "isPhysicallyFree": true, "reason": "safe", "open_space": 140 },
-      "left": { "safe": false, "isPhysicallyFree": false, "reason": "neck", "open_space": 0 },
-      "right": { "safe": true, "isPhysicallyFree": true, "reason": "safe", "open_space": 140 }
-    }
+    "recommended_safe_move": "up"
   },
   "questions": {
+    "tactical_action": { "type": "choice" },
     "move": { "type": "choice" }
   }
 }
 ```
 
-### Response
+### Multi-Decision Response
 ```json
 {
   "model": "rl-agent",
   "answers": {
+    "tactical_action": {
+      "type": "choice",
+      "choice": "shoot",
+      "probabilities": {
+        "shoot": 0.5841,
+        "evade_and_heal": 0.142,
+        "cast_grid_expansion": 0.113,
+        "gather_ammo": 0.098,
+        "hunt_food": 0.0629
+      }
+    },
     "move": {
       "type": "choice",
       "choice": "up",
       "probabilities": {
-        "up": 0.8058,
-        "down": 0.0506,
-        "left": 0.0268,
-        "right": 0.1169
-      },
-      "confidence": 0.6889
+        "up": 0.8124,
+        "down": 0.0642,
+        "left": 0.0211,
+        "right": 0.1023
+      }
     }
   },
-  "latency_ms": 38.4
+  "latency_ms": 42.5
 }
 ```
 
@@ -173,5 +167,5 @@ You can dynamically adjust the execution rate from the UI dropdown:
 
 ## 📄 License & Credits
 * Model: [`convaiinnovations/laya`](https://huggingface.co/convaiinnovations/laya).
-* Author: Mohammad Javad ([@IrMaho](https://github.com/IrMaho))
+* Author: Mohammad Javad ([@IrMaho](https://github.com/IrMaho)).
 * License: Apache 2.0.
