@@ -23,15 +23,22 @@ Featuring a **Multi-Criteria Tactical Decision Engine** combined with **Forward 
 * **🛡️ 5-Heart Hull Vitality & Invincibility Shield (i-Frames)**:
   * Snake is equipped with 5 HP vitality nodes and 25 ticks of translucent forcefield invulnerability after each hit, preventing rapid multi-hit deaths.
   * Perimeter Deflector Bounce and Auto-Warp Save prevent instant deaths against boundary walls.
+* **🌀 Quantum Dimension Warp (Strict 5-Warp Limit)**:
+  * Dynamically expands arena bounds (+1 row/col in 4 directions) on demand or when pinned near a wall.
+  * Strictly capped at **5 warps per sector** (`5/5 Left`); once exhausted, Laya receives `[EXHAUSTED/PROHIBITED]` to prevent infinite endless expansion.
+* **🏆 Sector Victory Progression (Target: 2,000 Pts)**:
+  * Eliminates endless infinite loops by providing a concrete sector completion target (Score 2,000).
+  * Upon victory, a celebratory Sector Clear modal appears with breakdown statistics and unlocks the next sector with enhanced enemy intensity.
+* **🎥 Built-in 60 FPS Canvas Screen Recorder**:
+  * Dedicated `🎥 Rec (60fps)` button records crystal-clear gameplay directly from browser memory via HTML5 MediaRecorder.
+  * Direct 1-click `.webm` download with zero capture flicker, zero black frames, and zero external screen recorder conflicts.
 * **🛸 Hostile AI Drones (Dynamic Balanced Enemies)**:
   * Autonomous drones spawn at safe distances and patrol with calibrated tactical speed.
   * Direct laser shots vaporize drones in dazzling particle bursts (+250 pts) with ammo/heart loot drops.
 * **💥 Plasma High-Voltage Laser Beam System**:
   * Fires glowing cyan laser beams in line of sight with particle trails, lens flares, and screen impact.
-* **🌀 Quantum Dimension Warp (Dynamic Grid Expansion)**:
-  * Dynamically expands arena bounds (+1 row/col in 4 directions) on demand or automatically when pinned near a wall.
 * **🔊 Synthesized Web Audio SFX Engine**:
-  * 100% self-contained procedural synthesizer generates laser blasts, explosions, warp whooshes, bleeps, and damage sirens directly in the browser with zero external audio files.
+  * 100% self-contained procedural synthesizer generates laser blasts, explosions, warp whooshes, bleeps, damage sirens, and victory fanfare directly in the browser with zero external audio files.
 * **📦 4-Tier Collectibles Ecosystem**:
   * 🍎 **Biomass Energy (Food)**: Grows snake body, scores points, and charges warp mana capacitor.
   * ⚡ **Plasma Ammo Pods**: Reloads laser weapon (+3 rounds).
@@ -39,8 +46,8 @@ Featuring a **Multi-Criteria Tactical Decision Engine** combined with **Forward 
   * 🎁 **EMP Quantum Hypercube (Gift)**: Freezes all hostile drones and charges 100% warp energy.
 * **🧠 Razor-Sharp Laya Decision Quality via PRIORITY Directives**:
   * High-contrast semantic criteria eliminate hesitation between shooting, evading, and harvesting.
-* **🛡️ Dual-Engine Spatial Safety**:
-  * Flood fill space invariance and BFS tail-corridor proofs guarantee zero suicidal wall or body collisions.
+* **🛡️ Dual-Engine Spatial Safety & Flicker-Free V-Sync**:
+  * Flood fill space invariance, zero empty-buffer `clearRect` states, and continuous `requestAnimationFrame` 60 FPS rendering.
 
 ---
 
