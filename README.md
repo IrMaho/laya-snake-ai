@@ -20,26 +20,27 @@ Featuring a **Multi-Criteria Tactical Decision Engine** combined with **Forward 
 
 ## ⚔️ Tactical Battle Arena Features
 
-* **🛸 Hostile AI Drones (Dynamic Enemies)**:
-  * Autonomous drones spawn and patrol the arena, actively chasing the snake.
-  * Contact with an enemy deals 1 Hull Damage (reducing HP).
-* **💥 Plasma Projectile Weapon (Shooting System)**:
-  * When Ammo > 0, the snake can discharge high-velocity plasma laser bolts along its line of sight.
-  * Direct hits vaporize hostile drones in explosive particle bursts (+200 pts) and drop tactical supplies.
-* **🌀 Quantum Dimension Warp (Grid Expansion on Demand)**:
-  * When cornered against perimeter walls, the snake can cast a Warp Spell to dynamically **expand the grid by 1 column/row**, creating instant escape corridors and altering board geometry in real time.
+* **🛡️ 5-Heart Hull Vitality & Invincibility Shield (i-Frames)**:
+  * Snake is equipped with 5 HP vitality nodes and 25 ticks of translucent forcefield invulnerability after each hit, preventing rapid multi-hit deaths.
+  * Perimeter Deflector Bounce and Auto-Warp Save prevent instant deaths against boundary walls.
+* **🛸 Hostile AI Drones (Dynamic Balanced Enemies)**:
+  * Autonomous drones spawn at safe distances and patrol with calibrated tactical speed.
+  * Direct laser shots vaporize drones in dazzling particle bursts (+250 pts) with ammo/heart loot drops.
+* **💥 Plasma High-Voltage Laser Beam System**:
+  * Fires glowing cyan laser beams in line of sight with particle trails, lens flares, and screen impact.
+* **🌀 Quantum Dimension Warp (Dynamic Grid Expansion)**:
+  * Dynamically expands arena bounds (+1 row/col in 4 directions) on demand or automatically when pinned near a wall.
+* **🔊 Synthesized Web Audio SFX Engine**:
+  * 100% self-contained procedural synthesizer generates laser blasts, explosions, warp whooshes, bleeps, and damage sirens directly in the browser with zero external audio files.
 * **📦 4-Tier Collectibles Ecosystem**:
-  * 🍎 **Biomass Energy (Food)**: Lengthens the snake and adds base points.
-  * ⚡ **Ammo Cells**: Replenishes plasma munition (+3 rounds).
-  * ❤️ **Vitality Heart**: Restores +1 HP (max 3 HP) to survive combat damage.
-  * 🎁 **Mystery Tactical Crate**: Triggers perks like **EMP Drone Freeze** or instant 100% Warp charge.
-* **🧠 Multi-Faceted Laya System 1 Decision Head**:
-  * In every tick, Laya evaluates multiple decisions simultaneously in a single forward pass:
-    * `tactical_action`: `["shoot", "evade_and_heal", "cast_grid_expansion", "gather_ammo", "hunt_food"]`
-    * `move`: `["up", "down", "left", "right"]`
-    * `threat_level`: `["SECURE RECON", "HOSTILE COMBAT", "CRITICAL THREAT"]`
-* **🛡 Dual-Engine Spatial Safety**:
-  * Mathematical lookahead and flood-fill invariants guarantee zero suicidal wall or neck collisions under any circumstances.
+  * 🍎 **Biomass Energy (Food)**: Grows snake body, scores points, and charges warp mana capacitor.
+  * ⚡ **Plasma Ammo Pods**: Reloads laser weapon (+3 rounds).
+  * ❤️ **Nanite Repair Kits (Heart)**: Restores +1 HP (up to 5 HP max).
+  * 🎁 **EMP Quantum Hypercube (Gift)**: Freezes all hostile drones and charges 100% warp energy.
+* **🧠 Razor-Sharp Laya Decision Quality via PRIORITY Directives**:
+  * High-contrast semantic criteria eliminate hesitation between shooting, evading, and harvesting.
+* **🛡️ Dual-Engine Spatial Safety**:
+  * Flood fill space invariance and BFS tail-corridor proofs guarantee zero suicidal wall or body collisions.
 
 ---
 

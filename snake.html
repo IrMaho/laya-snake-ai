@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laya Tactical Battle Arena · Cyber-Snake AI</title>
+  <title>Laya Cyber-Snake · Neural Tactical Arena</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #07090e;
-      --card-bg: rgba(15, 23, 42, 0.75);
-      --card-border: rgba(51, 65, 85, 0.45);
-      --accent-cyan: #06b6d4;
+      --bg-dark: #050811;
+      --card-bg: rgba(13, 20, 36, 0.78);
+      --card-border: rgba(56, 189, 248, 0.22);
+      --card-border-glow: rgba(56, 189, 248, 0.45);
+      --accent-cyan: #00f0ff;
       --accent-green: #10b981;
-      --accent-red: #f43f5e;
+      --accent-red: #ff2a5f;
       --accent-amber: #f59e0b;
-      --accent-purple: #a855f7;
-      --accent-pink: #ec4899;
+      --accent-purple: #b026ff;
+      --accent-pink: #ff007f;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
     }
@@ -31,9 +32,9 @@
     body {
       background: var(--bg-dark);
       background-image: 
-        radial-gradient(circle at 20% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 80% 85%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
-        linear-gradient(180deg, #07090e 0%, #0d131f 100%);
+        radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.09) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(176, 38, 255, 0.09) 0%, transparent 45%),
+        linear-gradient(180deg, #050811 0%, #0a0f1d 100%);
       color: var(--text-main);
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 13px;
@@ -43,10 +44,11 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      overflow-x: hidden;
     }
 
     .container {
-      width: 960px;
+      width: 1020px;
       max-width: 100%;
       margin: 0 auto;
       display: flex;
@@ -61,48 +63,51 @@
       justify-content: space-between;
       flex-wrap: wrap;
       background: var(--card-bg);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(16px);
       border: 1px solid var(--card-border);
       border-radius: 14px;
-      padding: 10px 18px;
+      padding: 10px 20px;
       gap: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .brand-logo {
-      width: 32px;
-      height: 32px;
+      width: 38px;
+      height: 38px;
       background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-      border-radius: 8px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+      font-size: 20px;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
     .brand-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      font-size: 15px;
-      letter-spacing: -0.5px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: 0.5px;
       color: #fff;
+      text-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
     }
 
     .brand-badge {
+      font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
-      padding: 2px 7px;
+      padding: 2px 8px;
       border-radius: 20px;
-      background: rgba(6, 182, 212, 0.15);
-      border: 1px solid rgba(6, 182, 212, 0.35);
+      background: rgba(0, 240, 255, 0.15);
+      border: 1px solid rgba(0, 240, 255, 0.4);
       color: var(--accent-cyan);
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -110,55 +115,59 @@
     .hud-stats {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       font-family: 'JetBrains Mono', monospace;
+      flex-wrap: wrap;
     }
 
     .hud-item {
       display: flex;
       align-items: center;
       gap: 6px;
-      background: rgba(2, 6, 23, 0.6);
-      padding: 4px 10px;
+      background: rgba(4, 9, 20, 0.75);
+      padding: 5px 12px;
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       font-size: 12px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
     }
 
     .hud-label {
       color: var(--text-muted);
       font-size: 11px;
+      font-weight: 600;
     }
 
     .hud-val {
-      font-weight: 700;
+      font-weight: 800;
       color: #fff;
     }
 
     .hud-hearts {
       display: flex;
-      gap: 3px;
+      gap: 4px;
       font-size: 14px;
+      letter-spacing: 1px;
     }
 
     .threat-badge {
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 8px;
       font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
+      font-weight: 800;
+      font-family: 'Orbitron', sans-serif;
       letter-spacing: 0.5px;
     }
-    .threat-recon { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: var(--accent-green); }
-    .threat-combat { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: var(--accent-amber); }
-    .threat-critical { background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.5); color: var(--accent-red); animation: pulse 1s infinite; }
+    .threat-recon { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.45); color: var(--accent-green); }
+    .threat-combat { background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.5); color: var(--accent-amber); }
+    .threat-critical { background: rgba(255, 42, 95, 0.22); border: 1px solid rgba(255, 42, 95, 0.6); color: var(--accent-red); animation: pulseGlow 1s infinite alternate; }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 5px rgba(255, 42, 95, 0.3); opacity: 0.85; }
+      100% { box-shadow: 0 0 18px rgba(255, 42, 95, 0.7); opacity: 1; }
     }
 
     /* Controls Bar */
@@ -168,16 +177,16 @@
       justify-content: space-between;
       flex-wrap: wrap;
       background: var(--card-bg);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(14px);
       border: 1px solid var(--card-border);
       border-radius: 12px;
-      padding: 8px 14px;
+      padding: 8px 16px;
       gap: 10px;
     }
 
     .mode-pills {
       display: flex;
-      background: rgba(2, 6, 23, 0.8);
+      background: rgba(3, 7, 18, 0.85);
       padding: 3px;
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -188,56 +197,65 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 5px 12px;
+      padding: 5px 14px;
       border-radius: 6px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.2s ease;
     }
 
     .mode-btn.active {
-      background: var(--accent-cyan);
-      color: #041019;
-      box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+      background: linear-gradient(135deg, var(--accent-cyan), #0284c7);
+      color: #031320;
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.5);
     }
 
     .action-group {
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(30, 41, 59, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       color: #fff;
-      padding: 6px 14px;
+      padding: 7px 14px;
       border-radius: 8px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
       cursor: pointer;
       transition: all 0.15s ease;
       user-select: none;
     }
 
-    .btn:hover {
-      background: rgba(51, 65, 85, 0.9);
-      border-color: rgba(255, 255, 255, 0.25);
+    .btn:hover:not(:disabled) {
+      background: rgba(51, 65, 85, 0.95);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
     .btn-primary {
       background: linear-gradient(135deg, #10b981, #059669);
       border-color: #34d399;
       color: #022013;
-      font-weight: 700;
     }
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       background: linear-gradient(135deg, #34d399, #10b981);
-      box-shadow: 0 0 14px rgba(16, 185, 129, 0.5);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.6);
     }
 
     .btn-laser {
@@ -246,11 +264,8 @@
       color: #fff;
     }
     .btn-laser:hover:not(:disabled) {
-      box-shadow: 0 0 14px rgba(56, 189, 248, 0.6);
-    }
-    .btn-laser:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.6);
     }
 
     .btn-warp {
@@ -259,33 +274,37 @@
       color: #fff;
     }
     .btn-warp:hover:not(:disabled) {
-      box-shadow: 0 0 14px rgba(167, 139, 250, 0.6);
+      background: linear-gradient(135deg, #a78bfa, #7c3aed);
+      box-shadow: 0 0 16px rgba(167, 139, 250, 0.6);
     }
-    .btn-warp:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
+
+    .btn-sound {
+      background: rgba(15, 23, 42, 0.8);
+      border-color: rgba(255, 255, 255, 0.12);
+      font-size: 13px;
+      padding: 7px 10px;
     }
 
     select {
-      background: rgba(2, 6, 23, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: var(--text-main);
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
       padding: 6px 10px;
       border-radius: 8px;
       font-size: 12px;
-      font-family: inherit;
+      font-family: 'JetBrains Mono', monospace;
       outline: none;
       cursor: pointer;
     }
 
-    /* Main Battle Layout */
+    /* Arena Grid */
     .arena-grid {
       display: grid;
-      grid-template-columns: 440px 1fr;
+      grid-template-columns: 460px 1fr;
       gap: 14px;
     }
 
-    @media (max-width: 860px) {
+    @media (max-width: 980px) {
       .arena-grid {
         grid-template-columns: 1fr;
       }
@@ -294,7 +313,7 @@
     /* Canvas Card */
     .canvas-card {
       background: var(--card-bg);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(14px);
       border: 1px solid var(--card-border);
       border-radius: 14px;
       padding: 14px;
@@ -302,42 +321,61 @@
       flex-direction: column;
       align-items: center;
       gap: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
       position: relative;
-      overflow: hidden;
     }
 
     .canvas-wrap {
       position: relative;
-      width: 400px;
-      height: 400px;
-      background: #020617;
-      border: 2px solid rgba(56, 189, 248, 0.3);
+      width: 420px;
+      height: 420px;
+      max-width: 100%;
+      background: #020610;
       border-radius: 12px;
-      box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8), 0 0 20px rgba(6, 182, 212, 0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
       overflow: hidden;
+      border: 2px solid rgba(0, 240, 255, 0.35);
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.15), inset 0 0 30px rgba(0, 0, 0, 0.8);
     }
 
-    #game-canvas {
+    canvas {
       display: block;
-      border-radius: 8px;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
     }
 
     .canvas-overlay-banner {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      background: rgba(2, 6, 23, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      top: 8px;
+      left: 10px;
+      background: rgba(2, 6, 23, 0.8);
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      padding: 3px 8px;
       border-radius: 6px;
-      padding: 4px 8px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
+      font-weight: 700;
       color: var(--accent-cyan);
       pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+
+    .canvas-overlay-invincible {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 240, 255, 0.25);
+      border: 1px solid var(--accent-cyan);
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      color: #fff;
+      display: none;
+      pointer-events: none;
+      animation: pulseGlow 0.5s infinite alternate;
     }
 
     .grid-expand-controls {
@@ -346,26 +384,31 @@
       justify-content: center;
       gap: 6px;
       width: 100%;
+      background: rgba(4, 9, 20, 0.6);
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .mini-btn {
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: var(--text-muted);
-      padding: 4px 8px;
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #e9d5ff;
+      padding: 5px 10px;
       border-radius: 6px;
       font-size: 11px;
+      font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
       cursor: pointer;
       transition: all 0.15s ease;
     }
     .mini-btn:hover {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: var(--accent-cyan);
+      background: rgba(168, 85, 247, 0.3);
+      border-color: #c084fc;
       color: #fff;
     }
 
-    /* Right Side Panels: Diagnostics & Telemetry */
+    /* Telemetry Column */
     .telemetry-col {
       display: flex;
       flex-direction: column;
@@ -374,37 +417,44 @@
 
     .card {
       background: var(--card-bg);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(14px);
       border: 1px solid var(--card-border);
       border-radius: 14px;
-      padding: 14px 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45);
+      transition: border-color 0.2s;
+    }
+    .card:hover {
+      border-color: var(--card-border-glow);
     }
 
     .card-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
       color: #fff;
-      text-transform: uppercase;
+      font-family: 'Orbitron', sans-serif;
       letter-spacing: 0.5px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding-bottom: 6px;
+      padding-bottom: 8px;
     }
 
     .card-head-tag {
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-muted);
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(0, 240, 255, 0.15);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      color: var(--accent-cyan);
     }
 
-    /* Tactical Probability Matrix */
+    /* Tactical Matrix */
     .tactical-matrix {
       display: flex;
       flex-direction: column;
@@ -415,41 +465,49 @@
       display: flex;
       flex-direction: column;
       gap: 3px;
+      background: rgba(2, 6, 23, 0.6);
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: all 0.2s ease;
+    }
+    .matrix-row.top-pick {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 240, 255, 0.08);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
     }
 
     .matrix-meta {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       font-size: 11px;
       font-family: 'JetBrains Mono', monospace;
     }
 
     .matrix-title {
+      font-weight: 700;
       display: flex;
       align-items: center;
       gap: 6px;
-      color: var(--text-main);
     }
 
     .matrix-bar-wrap {
       width: 100%;
-      height: 8px;
-      background: rgba(2, 6, 23, 0.8);
-      border-radius: 4px;
+      height: 6px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 3px;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .matrix-bar-fill {
       height: 100%;
-      border-radius: 4px;
+      border-radius: 3px;
       transition: width 0.15s ease;
-      width: 0%;
     }
 
-    /* Directions Horizontal Bars */
+    /* Direction Grid */
     .dir-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -460,37 +518,48 @@
       background: rgba(2, 6, 23, 0.6);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 8px;
-      padding: 7px 10px;
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      transition: all 0.15s ease;
+      gap: 5px;
+      transition: all 0.2s;
     }
+
     .dir-card.chosen {
       border-color: var(--accent-cyan);
-      background: rgba(6, 182, 212, 0.12);
-      box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
+      background: rgba(0, 240, 255, 0.12);
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.3);
     }
 
     .dir-head {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
       font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Live JSON Inspector */
+    .dir-status-tag {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .status-optimal { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.4); }
+    .status-safe { background: rgba(0, 240, 255, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 240, 255, 0.3); }
+    .status-blocked { background: rgba(255, 42, 95, 0.2); color: var(--accent-red); border: 1px solid rgba(255, 42, 95, 0.4); }
+
+    /* JSON Pre */
     .json-pre {
-      background: #020617;
+      background: #020611;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 8px;
       padding: 10px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
-      color: #94a3b8;
-      max-height: 160px;
+      color: #38bdf8;
+      max-height: 140px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-all;
@@ -503,7 +572,9 @@
       justify-content: space-between;
       font-size: 11px;
       color: #64748b;
-      padding: 4px 6px;
+      padding: 4px 8px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .footer a {
@@ -514,16 +585,16 @@
       text-decoration: underline;
     }
 
-    /* Screen shake for damage feedback */
+    /* Screen shake */
     .shake {
-      animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+      animation: screenShake 0.28s cubic-bezier(.36,.07,.19,.97) both;
     }
 
-    @keyframes shake {
-      10%, 90% { transform: translate3d(-2px, 0, 0); }
-      20%, 80% { transform: translate3d(3px, 0, 0); }
-      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-      40%, 60% { transform: translate3d(4px, 0, 0); }
+    @keyframes screenShake {
+      10%, 90% { transform: translate3d(-3px, 0, 0); }
+      20%, 80% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-5px, 0, 0); }
+      40%, 60% { transform: translate3d(5px, 0, 0); }
     }
   </style>
 </head>
@@ -538,28 +609,28 @@
         <div>
           <div style="display:flex; align-items:center; gap:8px;">
             <span class="brand-title">LAYA CYBER-SNAKE</span>
-            <span class="brand-badge">Tactical Arena</span>
+            <span class="brand-badge">Dual-Engine Arena</span>
           </div>
-          <div style="font-size:11px; color:var(--text-muted);">Neural System 1 Tactical Commander</div>
+          <div style="font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">Neural Commander + Spatial Lookahead</div>
         </div>
       </div>
 
       <div class="hud-stats">
-        <!-- HP Hearts -->
-        <div class="hud-item" title="Snake Vitality Points">
+        <!-- HP Hearts (5 Hearts) -->
+        <div class="hud-item" title="Snake Hull Vitality">
           <span class="hud-label">HP:</span>
-          <div class="hud-hearts" id="hud-hearts">❤️❤️❤️</div>
+          <div class="hud-hearts" id="hud-hearts">❤️❤️❤️❤️❤️</div>
         </div>
 
         <!-- Ammo Count -->
-        <div class="hud-item" title="Plasma Weapon Ammunition">
+        <div class="hud-item" title="Plasma Laser Ammo">
           <span class="hud-label">AMMO:</span>
           <span class="hud-val" id="hud-ammo" style="color:var(--accent-cyan);">⚡ 3</span>
         </div>
 
         <!-- Warp Mana -->
-        <div class="hud-item" title="Quantum Dimension Shift Energy">
-          <span class="hud-label">MANA:</span>
+        <div class="hud-item" title="Quantum Dimension Shift Capacitor">
+          <span class="hud-label">WARP:</span>
           <span class="hud-val" id="hud-mana" style="color:var(--accent-purple);">100%</span>
         </div>
 
@@ -569,7 +640,7 @@
         </div>
 
         <!-- Score -->
-        <div class="hud-item" title="Score">
+        <div class="hud-item" title="Total Tactical Score">
           <span class="hud-label">SCORE:</span>
           <span class="hud-val" id="hud-score" style="color:var(--accent-green);">0</span>
         </div>
@@ -580,7 +651,7 @@
     <div class="controls-bar">
       <!-- Mode Switcher -->
       <div class="mode-pills">
-        <button class="mode-btn active" id="btn-mode-battle" onclick="switchMode('battle')">⚔️ Battle Arena</button>
+        <button class="mode-btn active" id="btn-mode-battle" onclick="switchMode('battle')">⚔️ Tactical Arena</button>
         <button class="mode-btn" id="btn-mode-classic" onclick="switchMode('classic')">🎯 Pure Snake</button>
       </div>
 
@@ -589,18 +660,22 @@
         <button class="btn btn-primary" id="btn-start" onclick="toggleGame()">▶ Start Game</button>
         <button class="btn" id="btn-reset" onclick="resetGame()">↺ Reset</button>
 
-        <button class="btn btn-laser" id="btn-shoot" onclick="triggerManualShoot()" title="Discharge Plasma Laser (Spacebar)">
-          💥 Shoot Laser
+        <button class="btn btn-laser" id="btn-shoot" onclick="triggerManualShoot()" title="Discharge Plasma Laser Beam (Spacebar)">
+          💥 Fire Laser (Space)
         </button>
 
         <button class="btn btn-warp" id="btn-warp" onclick="triggerManualWarp()" title="Expand Grid 1 Column Left (E)">
-          🌀 Warp (+1 Col)
+          🌀 Quantum Warp (E)
+        </button>
+
+        <button class="btn btn-sound" id="btn-sound" onclick="toggleSound()" title="Toggle Web Audio Synthesizer">
+          🔊 SFX: ON
         </button>
 
         <select id="speed-select" onchange="changeSpeed(this.value)">
           <option value="0">⚡ Turbo (Max GPU)</option>
-          <option value="15" selected>🚀 Fast (15ms)</option>
-          <option value="45">⏱ Normal (45ms)</option>
+          <option value="20" selected>🚀 Fast (20ms)</option>
+          <option value="50">⏱ Tactical (50ms)</option>
           <option value="120">🐢 Slow (120ms)</option>
         </select>
       </div>
@@ -612,17 +687,18 @@
       <!-- Canvas Column -->
       <div class="canvas-card">
         <div class="canvas-wrap">
-          <canvas id="game-canvas" width="396" height="396"></canvas>
-          <div class="canvas-overlay-banner" id="grid-dim-text">GRID: 12 × 12</div>
+          <canvas id="game-canvas" width="420" height="420"></canvas>
+          <div class="canvas-overlay-banner" id="grid-dim-text">SECTOR: 12 × 12</div>
+          <div class="canvas-overlay-invincible" id="invincible-banner">🛡️ FORCE FIELD ACTIVE</div>
         </div>
 
         <!-- Dimension Expansion Controls -->
         <div class="grid-expand-controls">
-          <span style="font-size:11px;color:var(--text-muted);font-weight:600;">Manual Warp:</span>
-          <button class="mini-btn" onclick="expandGrid('left')" title="Expand 1 Column Left">◀ +Left</button>
-          <button class="mini-btn" onclick="expandGrid('right')" title="Expand 1 Column Right">+Right ▶</button>
-          <button class="mini-btn" onclick="expandGrid('up')" title="Expand 1 Row Up">▲ +Up</button>
-          <button class="mini-btn" onclick="expandGrid('down')" title="Expand 1 Row Down">+Down ▼</button>
+          <span style="font-size:11px;color:var(--text-muted);font-weight:700;font-family:'JetBrains Mono',monospace;">Warp Expand:</span>
+          <button class="mini-btn" onclick="expandGrid('left')" title="Expand 1 Column Left">◀ +West</button>
+          <button class="mini-btn" onclick="expandGrid('right')" title="Expand 1 Column Right">+East ▶</button>
+          <button class="mini-btn" onclick="expandGrid('up')" title="Expand 1 Row Up">▲ +North</button>
+          <button class="mini-btn" onclick="expandGrid('down')" title="Expand 1 Row Down">+South ▼</button>
         </div>
       </div>
 
@@ -632,36 +708,63 @@
         <!-- Card 1: Laya Tactical Combat Head -->
         <div class="card" id="tactical-card">
           <div class="card-head">
-            <span>🧠 Laya Tactical Combat Decision</span>
-            <span class="card-head-tag" id="tactical-choice-tag">EVALUATING</span>
+            <span>🧠 Laya Tactical Combat Head</span>
+            <span class="card-head-tag" id="tactical-choice-tag">STANDBY</span>
           </div>
           <div class="tactical-matrix" id="tactical-matrix">
-            <!-- Injected dynamically: Shoot, Evade, Warp, Ammo, Food -->
+            <!-- Dynamic: Shoot, Evade, Warp, Ammo, Food -->
           </div>
         </div>
 
         <!-- Card 2: Laya Direction Head -->
         <div class="card">
           <div class="card-head">
-            <span>🧭 Direction Probabilities</span>
+            <span>🧭 Direction Head &amp; Safety Filter</span>
             <span class="card-head-tag" id="latency-tag">-- ms</span>
           </div>
           <div class="dir-grid" id="dir-grid">
             <div class="dir-card" id="dir-card-up">
-              <div class="dir-head"><span>↑ UP</span><span id="p-up">0%</span></div>
-              <div class="matrix-bar-wrap"><div class="matrix-bar-fill" id="bar-up" style="background:var(--accent-cyan);"></div></div>
+              <div class="dir-head">
+                <span>↑ UP (North)</span>
+                <span id="p-up">0%</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="matrix-bar-wrap" style="flex:1; margin-right:8px;"><div class="matrix-bar-fill" id="bar-up" style="background:var(--accent-cyan); width:0%;"></div></div>
+                <span class="dir-status-tag status-safe" id="status-up">SAFE</span>
+              </div>
             </div>
+
             <div class="dir-card" id="dir-card-down">
-              <div class="dir-head"><span>↓ DOWN</span><span id="p-down">0%</span></div>
-              <div class="matrix-bar-wrap"><div class="matrix-bar-fill" id="bar-down" style="background:var(--accent-cyan);"></div></div>
+              <div class="dir-head">
+                <span>↓ DOWN (South)</span>
+                <span id="p-down">0%</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="matrix-bar-wrap" style="flex:1; margin-right:8px;"><div class="matrix-bar-fill" id="bar-down" style="background:var(--accent-cyan); width:0%;"></div></div>
+                <span class="dir-status-tag status-safe" id="status-down">SAFE</span>
+              </div>
             </div>
+
             <div class="dir-card" id="dir-card-left">
-              <div class="dir-head"><span>← LEFT</span><span id="p-left">0%</span></div>
-              <div class="matrix-bar-wrap"><div class="matrix-bar-fill" id="bar-left" style="background:var(--accent-cyan);"></div></div>
+              <div class="dir-head">
+                <span>← LEFT (West)</span>
+                <span id="p-left">0%</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="matrix-bar-wrap" style="flex:1; margin-right:8px;"><div class="matrix-bar-fill" id="bar-left" style="background:var(--accent-cyan); width:0%;"></div></div>
+                <span class="dir-status-tag status-safe" id="status-left">SAFE</span>
+              </div>
             </div>
+
             <div class="dir-card" id="dir-card-right">
-              <div class="dir-head"><span>→ RIGHT</span><span id="p-right">0%</span></div>
-              <div class="matrix-bar-wrap"><div class="matrix-bar-fill" id="bar-right" style="background:var(--accent-cyan);"></div></div>
+              <div class="dir-head">
+                <span>→ RIGHT (East)</span>
+                <span id="p-right">0%</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="matrix-bar-wrap" style="flex:1; margin-right:8px;"><div class="matrix-bar-fill" id="bar-right" style="background:var(--accent-cyan); width:0%;"></div></div>
+                <span class="dir-status-tag status-safe" id="status-right">SAFE</span>
+              </div>
             </div>
           </div>
         </div>
@@ -669,7 +772,7 @@
         <!-- Card 3: Live /v1/systemone Payload -->
         <div class="card">
           <div class="card-head">
-            <span>📡 Live /v1/systemone Telemetry</span>
+            <span>📡 Live Inference Telemetry</span>
             <span class="card-head-tag" id="telemetry-step">Step 0</span>
           </div>
           <pre class="json-pre" id="live-json">Awaiting game start...</pre>
@@ -681,25 +784,150 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <div>Keys: <b>Space</b> = Shoot Laser · <b>E</b> = Warp Grid · <b>Arrows</b> = Manual Move · <b>P</b> = Pause</div>
-      <div>Powered by <a href="https://huggingface.co/convaiinnovations/laya" target="_blank">Laya 8M (ModernBERT)</a> &amp; Dual-Engine Spatial Simulator</div>
+      <div>Hotkeys: <b>Space</b> = Fire Laser · <b>E</b> = Quantum Warp · <b>Arrows</b> = Manual Steer · <b>P</b> = Pause</div>
+      <div>Powered by <a href="https://huggingface.co/convaiinnovations/laya" target="_blank">Laya 8M (ModernBERT)</a> &amp; Dual-Engine Spatial Lookahead</div>
     </footer>
 
   </div>
 
   <script>
     /* =========================================================================
-       LAYA TACTICAL CYBER-SNAKE ENGINE
+       SYNTHESIZED WEB AUDIO SFX (Zero External Dependencies)
        ========================================================================= */
+    const AudioSys = {
+      ctx: null,
+      muted: false,
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      },
+      playLaser() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(900, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.14);
+        gain.gain.setValueAtTime(0.28, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.14);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.14);
+      },
+      playExplosion() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const bufSize = Math.floor(this.ctx.sampleRate * 0.22);
+        const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buf;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(550, this.ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.22);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+      },
+      playEat() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, this.ctx.currentTime + 0.05); // E5
+        osc.frequency.setValueAtTime(783.99, this.ctx.currentTime + 0.10); // G5
+        gain.gain.setValueAtTime(0.22, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.18);
+      },
+      playPickup() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.14);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.14);
+      },
+      playWarp() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(750, this.ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.28);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.28);
+      },
+      playHit() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(80, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.22);
+      }
+    };
 
+    function toggleSound() {
+      AudioSys.muted = !AudioSys.muted;
+      const btn = document.getElementById("btn-sound");
+      btn.textContent = AudioSys.muted ? "🔇 SFX: OFF" : "🔊 SFX: ON";
+      btn.style.color = AudioSys.muted ? "var(--text-muted)" : "var(--accent-cyan)";
+    }
+
+    /* =========================================================================
+       GAME CONFIG & GLOBAL STATE
+       ========================================================================= */
     const SERVER_URL = "http://localhost:8080";
     const CANVAS = document.getElementById("game-canvas");
     const CTX = CANVAS.getContext("2d");
 
-    // Game Mode: 'battle' or 'classic'
-    let gameMode = 'battle';
+    let gameMode = 'battle'; // 'battle' or 'classic'
 
-    // Dynamic Grid Geometry
+    // Dynamic Quantum Grid Geometry
     let grid = {
       minX: 0,
       maxX: 11,
@@ -719,7 +947,7 @@
     ];
     let currentDir = "right";
 
-    // Collectibles & Items
+    // Collectibles & Tactical Drops
     let items = {
       food: { x: 9, y: 3 },
       ammo: null,   // { x, y }
@@ -728,44 +956,44 @@
     };
 
     // Enemies (Hostile Drones)
-    let enemies = []; // [ { id, x, y, hp, type: 'drone', color: '#f43f5e', cooldown: 0 } ]
+    let enemies = []; // [ { id, x, y, hp, color, stepCounter } ]
     let enemySpawnCounter = 0;
 
-    // Projectiles
-    let projectiles = []; // [ { x, y, dx, dy, life } ]
+    // Visual Projectiles (Beams)
+    let projectiles = []; // [ { x, y, dx, dy, life, isBeam } ]
 
     // Floating Text FX
     let floatingTexts = []; // [ { text, x, y, color, alpha, vy } ]
 
     // Particle FX
-    let particles = []; // [ { x, y, vx, vy, color, life, maxLife } ]
+    let particles = []; // [ { x, y, vx, vy, color, life, maxLife, size } ]
 
-    // Inventory & Player Stats
+    // Player Stats
     let stats = {
-      hp: 3,
-      maxHp: 3,
+      hp: 5,
+      maxHp: 5,
       ammo: 3,
       mana: 100, // 0 to 100%
       score: 0,
-      highScore: 0,
-      freezeTimer: 0 // EMP freeze frames
+      invincibleTimer: 0, // i-frames
+      freezeTimer: 0      // EMP freeze timer
     };
 
     // Runtime loop controls
     let isRunning = false;
-    let tickSpeedMs = 15;
+    let tickSpeedMs = 20;
     let stepCount = 0;
     let isRequestInProgress = false;
 
     /* =========================================================================
-       INITIALIZATION & RESET
+       RESET & INITIALIZATION
        ========================================================================= */
-
     function resetGame() {
       isRunning = false;
-      document.getElementById("btn-start").textContent = "▶ Start Game";
-      document.getElementById("btn-start").classList.remove("btn-primary");
-      document.getElementById("btn-start").style.background = "#10b981";
+      const btn = document.getElementById("btn-start");
+      btn.textContent = "▶ Start Game";
+      btn.classList.add("btn-primary");
+      btn.style.background = "";
 
       grid = { minX: 0, maxX: 11, minY: 0, maxY: 11 };
       snake = [
@@ -776,10 +1004,12 @@
       ];
       currentDir = "right";
 
-      stats.hp = 3;
+      stats.hp = 5;
+      stats.maxHp = 5;
       stats.ammo = 3;
       stats.mana = 100;
       stats.score = 0;
+      stats.invincibleTimer = 0;
       stats.freezeTimer = 0;
 
       enemies = [];
@@ -796,6 +1026,8 @@
         spawnEnemy();
       }
 
+      document.getElementById("grid-dim-text").textContent = `SECTOR: ${getGridCols()} × ${getGridRows()}`;
+      document.getElementById("invincible-banner").style.display = "none";
       updateHUD();
       render();
     }
@@ -811,15 +1043,18 @@
     }
 
     function toggleGame() {
+      AudioSys.init();
       isRunning = !isRunning;
       const btn = document.getElementById("btn-start");
       if (isRunning) {
         btn.textContent = "⏸ Pause";
+        btn.classList.remove("btn-primary");
         btn.style.background = "#d97706";
         gameLoop();
       } else {
         btn.textContent = "▶ Resume";
-        btn.style.background = "#10b981";
+        btn.classList.add("btn-primary");
+        btn.style.background = "";
       }
     }
 
@@ -830,7 +1065,6 @@
     /* =========================================================================
        SPAWNING & GRID UTILS
        ========================================================================= */
-
     function isOccupied(x, y) {
       if (snake.some(s => s.x === x && s.y === y)) return true;
       if (items.food && items.food.x === x && items.food.y === y) return true;
@@ -853,27 +1087,27 @@
     }
 
     function spawnEnemy() {
-      if (enemies.length >= 3) return;
+      const maxEnemies = (stats.score > 800) ? 3 : 2;
+      if (enemies.length >= maxEnemies) return;
       const cell = spawnFreeCell();
-      // Ensure distance from snake head >= 4
+      // Ensure distance from snake head >= 5
       const dist = Math.abs(cell.x - snake[0].x) + Math.abs(cell.y - snake[0].y);
-      if (dist < 4) return;
+      if (dist < 5) return;
+
       enemies.push({
         id: Date.now() + Math.random(),
         x: cell.x,
         y: cell.y,
         hp: 1,
-        type: 'drone',
-        color: '#f43f5e',
+        color: '#ff2a5f',
         stepCounter: 0
       });
-      addFloatingText("🚨 HOSTILE DRONE DETECTED", cell.x, cell.y, "#f43f5e");
+      addFloatingText("🚨 HOSTILE DRONE", cell.x, cell.y, "#ff2a5f");
     }
 
     /* =========================================================================
-       DIMENSION WARP (EXPAND GRID ON DEMAND)
+       DIMENSION QUANTUM WARP (Grid Expansion)
        ========================================================================= */
-
     function expandGrid(side) {
       if (side === 'left') grid.minX -= 1;
       else if (side === 'right') grid.maxX += 1;
@@ -883,17 +1117,31 @@
       stats.mana = 0;
       stats.score += 50;
 
-      addFloatingText(`🌀 WARP: +1 ${side.toUpperCase()}!`, snake[0].x, snake[0].y, "#a855f7");
-      spawnParticles(snake[0].x, snake[0].y, "#a855f7", 20);
+      AudioSys.playWarp();
+      addFloatingText(`🌀 WARP +1 ${side.toUpperCase()}!`, snake[0].x, snake[0].y, "#b026ff");
+      spawnParticles(snake[0].x, snake[0].y, "#b026ff", 22);
 
-      document.getElementById("grid-dim-text").textContent = `GRID: ${getGridCols()} × ${getGridRows()}`;
+      document.getElementById("grid-dim-text").textContent = `SECTOR: ${getGridCols()} × ${getGridRows()}`;
       updateHUD();
       render();
     }
 
     function triggerManualWarp() {
       if (stats.mana >= 50) {
-        expandGrid('left');
+        // Expand side closest to head
+        const head = snake[0];
+        const distLeft = head.x - grid.minX;
+        const distRight = grid.maxX - head.x;
+        const distUp = head.y - grid.minY;
+        const distDown = grid.maxY - head.y;
+        const minDist = Math.min(distLeft, distRight, distUp, distDown);
+
+        let side = 'left';
+        if (minDist === distRight) side = 'right';
+        else if (minDist === distUp) side = 'up';
+        else if (minDist === distDown) side = 'down';
+
+        expandGrid(side);
       } else {
         addFloatingText("WARP NOT CHARGED", snake[0].x, snake[0].y, "#94a3b8");
       }
@@ -902,13 +1150,13 @@
     /* =========================================================================
        PLASMA WEAPON & PROJECTILES
        ========================================================================= */
-
     function fireWeapon(dir) {
       if (stats.ammo <= 0) {
         addFloatingText("OUT OF AMMO!", snake[0].x, snake[0].y, "#f59e0b");
         return;
       }
       stats.ammo -= 1;
+      AudioSys.playLaser();
 
       const vec = {
         up: [0, -1],
@@ -922,10 +1170,11 @@
         y: snake[0].y + vec[1],
         dx: vec[0],
         dy: vec[1],
-        life: 14
+        life: 14,
+        isBeam: true
       });
 
-      addFloatingText("💥 PEW!", snake[0].x, snake[0].y, "#38bdf8");
+      addFloatingText("💥 LASER FIRED!", snake[0].x, snake[0].y, "#00f0ff");
       updateHUD();
     }
 
@@ -934,9 +1183,8 @@
     }
 
     /* =========================================================================
-       DUAL-ENGINE SAFETY & LOOKAHEAD
+       DUAL-ENGINE SAFETY & PATH LOOKAHEAD
        ========================================================================= */
-
     function getNeighbors(x, y) {
       return [
         { dir: "up", x, y: y - 1 },
@@ -1006,8 +1254,10 @@
       }
       if (bodySet.has(`${nextHead.x},${nextHead.y}`)) return false;
 
-      // 3. Enemy collision is dangerous if not attacking
-      if (enemies.some(e => e.x === nextHead.x && e.y === nextHead.y)) return false;
+      // 3. Enemy collision
+      if (enemies.some(e => e.x === nextHead.x && e.y === nextHead.y) && stats.invincibleTimer <= 0) {
+        return false;
+      }
 
       // 4. Space evaluation
       const space = floodFillSpace(nextHead, bodySet);
@@ -1022,13 +1272,23 @@
     /* =========================================================================
        MAIN TELEMETRY & LAYA API INTEGRATION
        ========================================================================= */
-
     async function evaluateLayaDecision() {
       if (isRequestInProgress) return;
       isRequestInProgress = true;
 
       const head = snake[0];
-      const targetPos = items.food || { x: 5, y: 5 };
+
+      // Determine current tactical objective
+      let targetPos = items.food || { x: 5, y: 5 };
+      let priorityTarget = "food";
+
+      if (stats.hp <= 2 && items.heart) {
+        targetPos = items.heart;
+        priorityTarget = "heart";
+      } else if (stats.ammo === 0 && items.ammo) {
+        targetPos = items.ammo;
+        priorityTarget = "ammo";
+      }
 
       // Line of sight check to nearest enemy
       let enemyInLOS = false;
@@ -1055,7 +1315,7 @@
       const threatText = document.getElementById("threat-text");
       const threatBadge = document.getElementById("hud-threat");
       threatBadge.className = "threat-badge";
-      if (stats.hp === 1 || minEnemyDist <= 2) {
+      if (stats.hp <= 2 || minEnemyDist <= 2) {
         threatBadge.classList.add("threat-critical");
         threatText.textContent = "CRITICAL THREAT";
       } else if (minEnemyDist <= 5) {
@@ -1071,6 +1331,9 @@
       const safeMoves = [];
       const neck = snake.length > 1 ? snake[1] : null;
 
+      let bestSpace = -1;
+      let fallbackDir = null;
+
       for (const d of ["up", "down", "left", "right"]) {
         const vec = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[d];
         const nx = head.x + vec[0];
@@ -1081,6 +1344,7 @@
         const isBody = snake.slice(0, -1).some(s => s.x === nx && s.y === ny);
         const isEnemy = enemies.some(e => e.x === nx && e.y === ny);
         const safe = isSafeMove({ x: nx, y: ny }, targetPos);
+        const space = floodFillSpace({ x: nx, y: ny }, new Set(snake.map(s => `${s.x},${s.y}`)));
 
         let reason = "safe";
         if (isWall) reason = "wall";
@@ -1095,14 +1359,20 @@
           isPhysicallyFree: !isWall && !isNeck && !isBody,
           has_enemy: isEnemy,
           reason,
-          open_space: floodFillSpace({ x: nx, y: ny }, new Set(snake.map(s => `${s.x},${s.y}`)))
+          open_space: space
         };
+
+        // Track best open space for safety fallback
+        if (!isWall && !isNeck && !isBody && space > bestSpace) {
+          bestSpace = space;
+          fallbackDir = d;
+        }
 
         if (safe) safeMoves.push(d);
       }
 
       // Recommend safest direction towards current tactical objective
-      let recommendedDir = safeMoves[0] || "right";
+      let recommendedDir = safeMoves[0] || fallbackDir || "right";
       const pathToTarget = bfsPath(head, targetPos, new Set(snake.map(s => `${s.x},${s.y}`)));
       if (pathToTarget && pathToTarget.length > 0 && safeMoves.includes(pathToTarget[0])) {
         recommendedDir = pathToTarget[0];
@@ -1128,6 +1398,7 @@
           body: snake.map(s => [s.x, s.y]),
           snake_length: snake.length,
           food: [targetPos.x, targetPos.y],
+          priority_target: priorityTarget,
           enemies: enemies.map(e => ({ id: e.id, pos: [e.x, e.y], dist: Math.abs(e.x - head.x) + Math.abs(e.y - head.y) })),
           closest_enemy: closestEnemy,
           enemy_in_line_of_sight: enemyInLOS,
@@ -1165,27 +1436,44 @@
         document.getElementById("telemetry-step").textContent = `Step ${stepCount}`;
         document.getElementById("live-json").textContent = JSON.stringify(data, null, 2);
 
-        // Process Tactical Decision
+        // 1. Process Tactical Action Decision
         if (data.answers && data.answers.tactical_action) {
           renderTacticalMatrix(data.answers.tactical_action);
           const act = data.answers.tactical_action.choice;
+
           if (act === "shoot" && enemyInLOS && stats.ammo > 0) {
             fireWeapon(losDir);
           } else if (act === "cast_grid_expansion" && stats.mana >= 50) {
-            expandGrid("left");
+            // Determine side to warp
+            if (head.x === grid.minX) expandGrid("left");
+            else if (head.x === grid.maxX) expandGrid("right");
+            else if (head.y === grid.minY) expandGrid("up");
+            else if (head.y === grid.maxY) expandGrid("down");
+            else expandGrid("left");
           }
         }
 
-        // Process Movement Decision
+        // 2. Process Direction Decision with Dual-Engine Safety
         let chosenMove = recommendedDir;
         if (data.answers && data.answers.move) {
-          renderDirectionBars(data.answers.move);
+          renderDirectionBars(data.answers.move, moveAnalysis, recommendedDir);
           const modelMove = data.answers.move.choice;
-          // Apply safety guard
+
+          // If Laya chose a safe move, execute it
           if (safeMoves.includes(modelMove)) {
             chosenMove = modelMove;
           } else {
-            chosenMove = recommendedDir;
+            // Find highest probability move among SAFE moves
+            const probs = data.answers.move.probabilities || {};
+            let highestP = -1;
+            let bestSafe = recommendedDir;
+            for (const sm of safeMoves) {
+              if ((probs[sm] || 0) > highestP) {
+                highestP = probs[sm];
+                bestSafe = sm;
+              }
+            }
+            chosenMove = bestSafe;
           }
         }
 
@@ -1205,8 +1493,8 @@
 
       const icons = {
         shoot: "💥 DISCHARGE LASER",
-        evade_and_heal: "🛡 EVADE & HEAL",
-        cast_grid_expansion: "🌀 WARP GRID",
+        evade_and_heal: "🛡️ EVADE & REPAIR",
+        cast_grid_expansion: "🌀 QUANTUM WARP",
         gather_ammo: "⚡ GATHER AMMO",
         hunt_food: "🍎 HARVEST BIOMASS"
       };
@@ -1220,14 +1508,20 @@
       };
 
       const probs = tacticalData.probabilities || {};
-      for (const [key, p] of Object.entries(probs)) {
+      const sorted = Object.entries(probs).sort((a, b) => b[1] - a[1]);
+
+      for (const [key, p] of sorted) {
         const pct = Math.round(p * 100);
+        const isTop = (key === tacticalData.choice);
         const row = document.createElement("div");
-        row.className = "matrix-row";
+        row.className = `matrix-row ${isTop ? 'top-pick' : ''}`;
         row.innerHTML = `
           <div class="matrix-meta">
-            <span class="matrix-title">${icons[key] || key}</span>
-            <span style="font-weight:700;color:${colors[key] || '#fff'};">${pct}%</span>
+            <span class="matrix-title">
+              <span>${icons[key] || key}</span>
+              ${isTop ? '<span style="font-size:9px; background:rgba(0,240,255,0.25); color:var(--accent-cyan); padding:1px 5px; border-radius:4px; font-weight:800;">ACTIVE</span>' : ''}
+            </span>
+            <span style="font-weight:800;color:${colors[key] || '#fff'};">${pct}%</span>
           </div>
           <div class="matrix-bar-wrap">
             <div class="matrix-bar-fill" style="width:${pct}%;background:${colors[key] || 'var(--accent-cyan)'};"></div>
@@ -1237,7 +1531,7 @@
       }
     }
 
-    function renderDirectionBars(moveData) {
+    function renderDirectionBars(moveData, moveAnalysis, recommendedDir) {
       const probs = moveData.probabilities || {};
       const chosen = moveData.choice;
 
@@ -1245,39 +1539,61 @@
         const pct = Math.round((probs[d] || 0) * 100);
         document.getElementById(`p-${d}`).textContent = `${pct}%`;
         document.getElementById(`bar-${d}`).style.width = `${pct}%`;
-        document.getElementById(`dir-card-${d}`).classList.toggle("chosen", d === chosen);
+
+        const isChosen = (d === chosen);
+        document.getElementById(`dir-card-${d}`).classList.toggle("chosen", isChosen);
+
+        // Update tag
+        const tag = document.getElementById(`status-${d}`);
+        const info = moveAnalysis[d] || {};
+        if (d === recommendedDir) {
+          tag.className = "dir-status-tag status-optimal";
+          tag.textContent = "OPTIMAL";
+        } else if (info.safe) {
+          tag.className = "dir-status-tag status-safe";
+          tag.textContent = "SAFE";
+        } else {
+          tag.className = "dir-status-tag status-blocked";
+          tag.textContent = (info.reason || "BLOCKED").toUpperCase();
+        }
       }
     }
 
     /* =========================================================================
        GAME TICK & PHYSICS SIMULATION
        ========================================================================= */
-
     function tick() {
       stepCount++;
 
-      // 1. Move Projectiles
+      // Decrement Invincibility i-frames
+      if (stats.invincibleTimer > 0) {
+        stats.invincibleTimer--;
+        document.getElementById("invincible-banner").style.display = (stats.invincibleTimer > 0) ? "block" : "none";
+      }
+
+      // 1. Projectiles (Laser Beams)
       for (let i = projectiles.length - 1; i >= 0; i--) {
         const p = projectiles[i];
         p.x += p.dx;
         p.y += p.dy;
         p.life -= 1;
 
-        // Check collision with enemies
+        // Check collision with hostile drones
         let hit = false;
         for (let j = enemies.length - 1; j >= 0; j--) {
           const e = enemies[j];
           if (e.x === p.x && e.y === p.y) {
             hit = true;
             enemies.splice(j, 1);
-            stats.score += 200;
-            addFloatingText("🎯 TARGET VAPORIZED! +200", p.x, p.y, "#f43f5e");
-            spawnParticles(p.x, p.y, "#f43f5e", 24);
+            stats.score += 250;
+            AudioSys.playExplosion();
+            addFloatingText("🎯 TARGET VAPORIZED! +250", p.x, p.y, "#ff2a5f");
+            spawnParticles(p.x, p.y, "#ff2a5f", 25);
 
             // 50% chance to drop Ammo or Heart
             if (Math.random() < 0.5 && !items.ammo) {
               items.ammo = { x: p.x, y: p.y };
-            } else if (stats.hp < 3 && !items.heart) {
+            } else if (stats.hp < stats.maxHp && !items.heart) {
               items.heart = { x: p.x, y: p.y };
             }
             break;
@@ -1289,14 +1605,15 @@
         }
       }
 
-      // 2. Move Enemies (if not frozen)
+      // 2. Hostile Drones (Balanced movement speed: every 4 ticks)
       if (stats.freezeTimer > 0) {
         stats.freezeTimer--;
       } else {
         enemySpawnCounter++;
-        if (enemySpawnCounter % 2 === 0) {
-          for (const e of enemies) {
-            // Chase snake head
+        if (enemySpawnCounter % 4 === 0) {
+          for (let i = enemies.length - 1; i >= 0; i--) {
+            const e = enemies[i];
+            // Path towards snake head
             const dx = Math.sign(snake[0].x - e.x);
             const dy = Math.sign(snake[0].y - e.y);
             const moveAxis = Math.random() < 0.5 ? 'x' : 'y';
@@ -1311,28 +1628,33 @@
               e.y = ny;
             }
 
-            // Check collision with snake head or body
+            // Check collision with snake
             if (snake.some(s => s.x === e.x && s.y === e.y)) {
-              stats.hp -= 1;
-              addFloatingText("💥 HULL BREACH! -1 HP", snake[0].x, snake[0].y, "#f43f5e");
-              spawnParticles(e.x, e.y, "#f43f5e", 15);
-              document.getElementById("main-container").classList.add("shake");
-              setTimeout(() => document.getElementById("main-container").classList.remove("shake"), 300);
+              if (stats.invincibleTimer <= 0) {
+                stats.hp -= 1;
+                stats.invincibleTimer = 25; // 25 ticks of i-frames!
+                AudioSys.playHit();
+                addFloatingText("💥 SHIELD BREACH! -1 HP", snake[0].x, snake[0].y, "#ff2a5f");
+                spawnParticles(e.x, e.y, "#ff2a5f", 20);
 
-              // Remove enemy on collision
-              enemies = enemies.filter(en => en !== e);
-              updateHUD();
+                document.getElementById("main-container").classList.add("shake");
+                setTimeout(() => document.getElementById("main-container").classList.remove("shake"), 300);
 
-              if (stats.hp <= 0) {
-                gameOver();
-                return;
+                // Destroy enemy on collision
+                enemies.splice(i, 1);
+                updateHUD();
+
+                if (stats.hp <= 0) {
+                  gameOver();
+                  return;
+                }
               }
             }
           }
         }
 
         // Spawn periodic enemies
-        if (gameMode === 'battle' && enemySpawnCounter % 35 === 0) {
+        if (gameMode === 'battle' && enemySpawnCounter % 36 === 0) {
           spawnEnemy();
         }
       }
@@ -1341,13 +1663,31 @@
       const vec = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[currentDir];
       const newHead = { x: snake[0].x + vec[0], y: snake[0].y + vec[1] };
 
-      // Perimeter crash guard
+      // Perimeter crash guard: Auto-Warp or Shield Bounce
       if (!isValid(newHead.x, newHead.y)) {
-        gameOver();
-        return;
+        if (stats.mana >= 50) {
+          // Emergency Quantum Warp Save!
+          const side = (newHead.x < grid.minX) ? 'left' : (newHead.x > grid.maxX) ? 'right' : (newHead.y < grid.minY) ? 'up' : 'down';
+          expandGrid(side);
+        } else {
+          // Shield Bounce: Take 1 HP damage and turn safely
+          stats.hp -= 1;
+          stats.invincibleTimer = 20;
+          AudioSys.playHit();
+          addFloatingText("⚡ PERIMETER DEFLECTOR! -1 HP", snake[0].x, snake[0].y, "#f59e0b");
+          spawnParticles(snake[0].x, snake[0].y, "#f59e0b", 16);
+          updateHUD();
+
+          if (stats.hp <= 0) {
+            gameOver();
+            return;
+          }
+          // Do not advance head into invalid cell
+          return;
+        }
       }
 
-      // Self-collision guard
+      // Self-collision check
       if (snake.slice(0, -1).some(s => s.x === newHead.x && s.y === newHead.y)) {
         gameOver();
         return;
@@ -1358,16 +1698,17 @@
       // Check Collectibles
       let ate = false;
 
-      // 🍎 Food
+      // 🍎 Biomass Core
       if (items.food && newHead.x === items.food.x && newHead.y === items.food.y) {
         ate = true;
         stats.score += 100;
-        stats.mana = Math.min(100, stats.mana + 15);
-        addFloatingText("+100 FOOD", newHead.x, newHead.y, "#10b981");
-        spawnParticles(newHead.x, newHead.y, "#10b981", 10);
+        stats.mana = Math.min(100, stats.mana + 20);
+        AudioSys.playEat();
+        addFloatingText("+100 BIOMASS", newHead.x, newHead.y, "#10b981");
+        spawnParticles(newHead.x, newHead.y, "#10b981", 14);
         items.food = spawnFreeCell();
 
-        // 30% chance to spawn an ammo crate or mystery gift
+        // 35% chance to spawn an ammo crate or mystery gift
         if (gameMode === 'battle' && Math.random() < 0.35 && !items.ammo) {
           items.ammo = spawnFreeCell();
         } else if (gameMode === 'battle' && Math.random() < 0.25 && !items.gift) {
@@ -1375,30 +1716,33 @@
         }
       }
 
-      // ⚡ Ammo
+      // ⚡ Ammo Pack
       if (items.ammo && newHead.x === items.ammo.x && newHead.y === items.ammo.y) {
         stats.ammo += 3;
         stats.score += 50;
-        addFloatingText("+3 AMMO ⚡", newHead.x, newHead.y, "#38bdf8");
-        spawnParticles(newHead.x, newHead.y, "#38bdf8", 12);
+        AudioSys.playPickup();
+        addFloatingText("+3 AMMO ⚡", newHead.x, newHead.y, "#00f0ff");
+        spawnParticles(newHead.x, newHead.y, "#00f0ff", 14);
         items.ammo = null;
       }
 
-      // ❤️ Heart
+      // ❤️ Nanite Repair Kit
       if (items.heart && newHead.x === items.heart.x && newHead.y === items.heart.y) {
         stats.hp = Math.min(stats.maxHp, stats.hp + 1);
-        addFloatingText("+1 HP ❤️", newHead.x, newHead.y, "#ec4899");
-        spawnParticles(newHead.x, newHead.y, "#ec4899", 15);
+        AudioSys.playPickup();
+        addFloatingText("+1 HP REPAIR ❤️", newHead.x, newHead.y, "#ff007f");
+        spawnParticles(newHead.x, newHead.y, "#ff007f", 16);
         items.heart = null;
       }
 
-      // 🎁 Mystery Gift
+      // 🎁 EMP Matrix Gift
       if (items.gift && newHead.x === items.gift.x && newHead.y === items.gift.y) {
-        stats.freezeTimer = 40; // EMP Freeze
+        stats.freezeTimer = 45; // EMP Freeze
         stats.mana = 100;
         stats.score += 300;
-        addFloatingText("🎁 EMP FREEZE ACTIVATED!", newHead.x, newHead.y, "#a855f7");
-        spawnParticles(newHead.x, newHead.y, "#a855f7", 20);
+        AudioSys.playWarp();
+        addFloatingText("🎁 EMP FREEZE ACTIVATED!", newHead.x, newHead.y, "#b026ff");
+        spawnParticles(newHead.x, newHead.y, "#b026ff", 25);
         items.gift = null;
       }
 
@@ -1406,8 +1750,8 @@
         snake.pop();
       }
 
-      // Update Mana passively
-      if (stats.mana < 100 && stepCount % 5 === 0) {
+      // Passive Mana Recharge
+      if (stats.mana < 100 && stepCount % 4 === 0) {
         stats.mana = Math.min(100, stats.mana + 1);
       }
 
@@ -1417,22 +1761,25 @@
 
     function gameOver() {
       isRunning = false;
-      document.getElementById("btn-start").textContent = "💀 Game Over (Restart)";
-      document.getElementById("btn-start").style.background = "#f43f5e";
-      addFloatingText("💀 MISSION FAILED", snake[0].x, snake[0].y, "#f43f5e");
+      AudioSys.playHit();
+      const btn = document.getElementById("btn-start");
+      btn.textContent = "💀 Game Over (Restart)";
+      btn.classList.remove("btn-primary");
+      btn.style.background = "#ff2a5f";
+      addFloatingText("💀 HULL DESTROYED", snake[0].x, snake[0].y, "#ff2a5f");
     }
 
     function updateHUD() {
-      // Hearts
+      // 5 Hearts
       const heartsStr = "❤️".repeat(Math.max(0, stats.hp)) + "🖤".repeat(Math.max(0, stats.maxHp - stats.hp));
       document.getElementById("hud-hearts").textContent = heartsStr;
 
-      // Ammo & Mana
+      // Ammo & Mana & Score
       document.getElementById("hud-ammo").textContent = `⚡ ${stats.ammo}`;
       document.getElementById("hud-mana").textContent = `${stats.mana}%`;
       document.getElementById("hud-score").textContent = stats.score;
 
-      // Button states
+      // Buttons
       document.getElementById("btn-shoot").disabled = (stats.ammo <= 0);
       document.getElementById("btn-warp").disabled = (stats.mana < 50);
     }
@@ -1440,8 +1787,7 @@
     /* =========================================================================
        RENDERER & VISUAL FX
        ========================================================================= */
-
-    function spawnParticles(gridX, gridY, color, count = 12) {
+    function spawnParticles(gridX, gridY, color, count = 14) {
       const cols = getGridCols();
       const rows = getGridRows();
       const cellSize = CANVAS.width / Math.max(cols, rows);
@@ -1450,15 +1796,16 @@
 
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const spd = 1.5 + Math.random() * 4;
+        const spd = 1.2 + Math.random() * 4.5;
         particles.push({
           x: px,
           y: py,
           vx: Math.cos(angle) * spd,
           vy: Math.sin(angle) * spd,
           color,
-          life: 18 + Math.floor(Math.random() * 12),
-          maxLife: 30
+          life: 18 + Math.floor(Math.random() * 14),
+          maxLife: 32,
+          size: 2 + Math.random() * 2
         });
       }
     }
@@ -1476,7 +1823,7 @@
         y: py,
         color,
         alpha: 1.0,
-        vy: -1.2
+        vy: -1.3
       });
     }
 
@@ -1487,11 +1834,18 @@
 
       CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
 
-      // 1. Draw Grid Canvas Background & Subtle Grid Lines
-      CTX.fillStyle = "#030712";
+      // 1. Digital Cyber Canvas Background
+      const bgGrad = CTX.createRadialGradient(
+        CANVAS.width / 2, CANVAS.height / 2, 20,
+        CANVAS.width / 2, CANVAS.height / 2, CANVAS.width * 0.75
+      );
+      bgGrad.addColorStop(0, "#081024");
+      bgGrad.addColorStop(1, "#02050e");
+      CTX.fillStyle = bgGrad;
       CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
 
-      CTX.strokeStyle = "rgba(56, 189, 248, 0.08)";
+      // Cyber Grid Lines
+      CTX.strokeStyle = "rgba(0, 240, 255, 0.08)";
       CTX.lineWidth = 1;
       for (let x = 0; x <= cols; x++) {
         CTX.beginPath();
@@ -1506,12 +1860,14 @@
         CTX.stroke();
       }
 
-      // Draw Outer Quantum Perimeter Boundary
-      CTX.strokeStyle = (stats.hp === 1) ? "rgba(244, 63, 94, 0.7)" : "rgba(6, 182, 212, 0.5)";
-      CTX.lineWidth = 2;
-      CTX.strokeRect(0, 0, cols * cellSize, rows * cellSize);
+      // Holographic Perimeter Boundary
+      CTX.strokeStyle = (stats.hp <= 2) ? "rgba(255, 42, 95, 0.85)" : "rgba(0, 240, 255, 0.6)";
+      CTX.shadowColor = (stats.hp <= 2) ? "#ff2a5f" : "#00f0ff";
+      CTX.shadowBlur = (stats.hp <= 2) ? 14 : 8;
+      CTX.lineWidth = 2.5;
+      CTX.strokeRect(1, 1, cols * cellSize - 2, rows * cellSize - 2);
+      CTX.shadowBlur = 0;
 
-      // Helper to map grid (x, y) to canvas (px, py)
       function toPx(gx, gy) {
         return {
           x: (gx - grid.minX) * cellSize,
@@ -1519,15 +1875,21 @@
         };
       }
 
-      // 2. Draw Collectibles
-      // 🍎 Food (Apple)
+      // 2. Collectibles
+      // 🍎 Biomass (Apple)
       if (items.food) {
         const p = toPx(items.food.x, items.food.y);
-        CTX.fillStyle = "#ef4444";
-        CTX.shadowColor = "#ef4444";
-        CTX.shadowBlur = 12;
+        CTX.fillStyle = "#10b981";
+        CTX.shadowColor = "#10b981";
+        CTX.shadowBlur = 14;
         CTX.beginPath();
         CTX.arc(p.x + cellSize / 2, p.y + cellSize / 2, cellSize * 0.38, 0, Math.PI * 2);
+        CTX.fill();
+
+        // Inner glowing core
+        CTX.fillStyle = "#a7f3d0";
+        CTX.beginPath();
+        CTX.arc(p.x + cellSize * 0.42, p.y + cellSize * 0.42, cellSize * 0.14, 0, Math.PI * 2);
         CTX.fill();
         CTX.shadowBlur = 0;
       }
@@ -1535,12 +1897,14 @@
       // ⚡ Ammo Pack
       if (items.ammo) {
         const p = toPx(items.ammo.x, items.ammo.y);
-        CTX.fillStyle = "#38bdf8";
-        CTX.shadowColor = "#38bdf8";
-        CTX.shadowBlur = 10;
-        CTX.fillRect(p.x + cellSize * 0.2, p.y + cellSize * 0.2, cellSize * 0.6, cellSize * 0.6);
-        CTX.fillStyle = "#fff";
-        CTX.font = `bold ${Math.floor(cellSize * 0.5)}px sans-serif`;
+        CTX.fillStyle = "#00f0ff";
+        CTX.shadowColor = "#00f0ff";
+        CTX.shadowBlur = 12;
+        CTX.beginPath();
+        CTX.roundRect(p.x + cellSize * 0.18, p.y + cellSize * 0.18, cellSize * 0.64, cellSize * 0.64, 5);
+        CTX.fill();
+        CTX.fillStyle = "#020e18";
+        CTX.font = `bold ${Math.floor(cellSize * 0.52)}px sans-serif`;
         CTX.textAlign = "center";
         CTX.textBaseline = "middle";
         CTX.fillText("⚡", p.x + cellSize / 2, p.y + cellSize / 2);
@@ -1550,90 +1914,124 @@
       // ❤️ Heart Pack
       if (items.heart) {
         const p = toPx(items.heart.x, items.heart.y);
-        CTX.font = `${Math.floor(cellSize * 0.7)}px sans-serif`;
+        CTX.font = `${Math.floor(cellSize * 0.72)}px sans-serif`;
         CTX.textAlign = "center";
         CTX.textBaseline = "middle";
+        CTX.shadowColor = "#ff007f";
+        CTX.shadowBlur = 14;
         CTX.fillText("❤️", p.x + cellSize / 2, p.y + cellSize / 2);
+        CTX.shadowBlur = 0;
       }
 
-      // 🎁 Mystery Gift
+      // 🎁 Mystery EMP Gift
       if (items.gift) {
         const p = toPx(items.gift.x, items.gift.y);
-        CTX.font = `${Math.floor(cellSize * 0.7)}px sans-serif`;
+        CTX.font = `${Math.floor(cellSize * 0.72)}px sans-serif`;
         CTX.textAlign = "center";
         CTX.textBaseline = "middle";
+        CTX.shadowColor = "#b026ff";
+        CTX.shadowBlur = 14;
         CTX.fillText("🎁", p.x + cellSize / 2, p.y + cellSize / 2);
+        CTX.shadowBlur = 0;
       }
 
-      // 3. Draw Enemies (Drones)
+      // 3. Enemies (Cyber Drones)
       for (const e of enemies) {
         const p = toPx(e.x, e.y);
         CTX.fillStyle = e.color;
         CTX.shadowColor = e.color;
-        CTX.shadowBlur = 14;
+        CTX.shadowBlur = 16;
 
-        // Draw diamond/drone shape
+        // Drone Chassis
         CTX.beginPath();
-        CTX.moveTo(p.x + cellSize / 2, p.y + cellSize * 0.1);
-        CTX.lineTo(p.x + cellSize * 0.9, p.y + cellSize / 2);
-        CTX.lineTo(p.x + cellSize / 2, p.y + cellSize * 0.9);
-        CTX.lineTo(p.x + cellSize * 0.1, p.y + cellSize / 2);
+        CTX.moveTo(p.x + cellSize / 2, p.y + cellSize * 0.08);
+        CTX.lineTo(p.x + cellSize * 0.92, p.y + cellSize / 2);
+        CTX.lineTo(p.x + cellSize / 2, p.y + cellSize * 0.92);
+        CTX.lineTo(p.x + cellSize * 0.08, p.y + cellSize / 2);
         CTX.closePath();
         CTX.fill();
 
-        // Eye / Core
-        CTX.fillStyle = "#fff";
+        // Glowing Drone Eye
+        CTX.fillStyle = "#ffffff";
         CTX.beginPath();
-        CTX.arc(p.x + cellSize / 2, p.y + cellSize / 2, cellSize * 0.18, 0, Math.PI * 2);
+        CTX.arc(p.x + cellSize / 2, p.y + cellSize / 2, cellSize * 0.2, 0, Math.PI * 2);
         CTX.fill();
         CTX.shadowBlur = 0;
       }
 
-      // 4. Draw Projectiles
+      // 4. Projectiles (Laser Beams)
       for (const pr of projectiles) {
         const p = toPx(pr.x, pr.y);
-        CTX.fillStyle = "#38bdf8";
-        CTX.shadowColor = "#38bdf8";
-        CTX.shadowBlur = 16;
-        CTX.beginPath();
-        CTX.arc(p.x + cellSize / 2, p.y + cellSize / 2, cellSize * 0.25, 0, Math.PI * 2);
-        CTX.fill();
+        CTX.fillStyle = "#00f0ff";
+        CTX.shadowColor = "#00f0ff";
+        CTX.shadowBlur = 18;
+
+        if (pr.dx !== 0) {
+          CTX.fillRect(p.x + 2, p.y + cellSize * 0.35, cellSize - 4, cellSize * 0.3);
+        } else {
+          CTX.fillRect(p.x + cellSize * 0.35, p.y + 2, cellSize * 0.3, cellSize - 4);
+        }
         CTX.shadowBlur = 0;
       }
 
-      // 5. Draw Snake Body & Head
+      // 5. Snake Body & Cybernetic Head
       for (let i = snake.length - 1; i >= 0; i--) {
         const s = snake[i];
         const p = toPx(s.x, s.y);
         const isHead = (i === 0);
 
         if (isHead) {
-          CTX.fillStyle = "#10b981";
-          CTX.shadowColor = "#10b981";
-          CTX.shadowBlur = 12;
+          // If invincible, draw pulsing shield bubble
+          if (stats.invincibleTimer > 0) {
+            CTX.strokeStyle = "#00f0ff";
+            CTX.shadowColor = "#00f0ff";
+            CTX.shadowBlur = 20;
+            CTX.lineWidth = 3;
+            CTX.beginPath();
+            CTX.arc(p.x + cellSize / 2, p.y + cellSize / 2, cellSize * 0.65, 0, Math.PI * 2);
+            CTX.stroke();
+            CTX.shadowBlur = 0;
+          }
+
+          // Cyber Head
+          CTX.fillStyle = "#00f0ff";
+          CTX.shadowColor = "#00f0ff";
+          CTX.shadowBlur = 14;
           CTX.beginPath();
-          CTX.roundRect(p.x + 2, p.y + 2, cellSize - 4, cellSize - 4, 6);
+          CTX.roundRect(p.x + 2, p.y + 2, cellSize - 4, cellSize - 4, 8);
           CTX.fill();
 
-          // Cyber Eyes
-          CTX.fillStyle = "#022013";
+          // Cyber Visor / Optics
+          CTX.fillStyle = "#020f1a";
           const eyeOffset = cellSize * 0.28;
           CTX.beginPath();
-          CTX.arc(p.x + eyeOffset, p.y + eyeOffset, cellSize * 0.12, 0, Math.PI * 2);
-          CTX.arc(p.x + cellSize - eyeOffset, p.y + eyeOffset, cellSize * 0.12, 0, Math.PI * 2);
+          CTX.arc(p.x + eyeOffset, p.y + eyeOffset, cellSize * 0.13, 0, Math.PI * 2);
+          CTX.arc(p.x + cellSize - eyeOffset, p.y + eyeOffset, cellSize * 0.13, 0, Math.PI * 2);
+          CTX.fill();
+
+          // Optic core
+          CTX.fillStyle = "#facc15";
+          CTX.beginPath();
+          CTX.arc(p.x + eyeOffset, p.y + eyeOffset, cellSize * 0.06, 0, Math.PI * 2);
+          CTX.arc(p.x + cellSize - eyeOffset, p.y + eyeOffset, cellSize * 0.06, 0, Math.PI * 2);
           CTX.fill();
           CTX.shadowBlur = 0;
         } else {
-          // Body gradient
+          // Segmented Body Gradient
           const factor = i / snake.length;
-          CTX.fillStyle = `hsl(${160 - factor * 20}, 75%, ${45 - factor * 10}%)`;
+          const hue = 180 - factor * 40; // Cyan to green/blue
+          CTX.fillStyle = `hsl(${hue}, 85%, ${50 - factor * 12}%)`;
           CTX.beginPath();
-          CTX.roundRect(p.x + 3, p.y + 3, cellSize - 6, cellSize - 6, 4);
+          CTX.roundRect(p.x + 3, p.y + 3, cellSize - 6, cellSize - 6, 5);
           CTX.fill();
+
+          // Data spine stripe
+          CTX.fillStyle = "rgba(255, 255, 255, 0.4)";
+          CTX.fillRect(p.x + cellSize * 0.42, p.y + cellSize * 0.42, cellSize * 0.16, cellSize * 0.16);
         }
       }
 
-      // 6. Draw Particles
+      // 6. Particle FX
       for (let i = particles.length - 1; i >= 0; i--) {
         const pt = particles[i];
         pt.x += pt.vx;
@@ -1644,22 +2042,22 @@
         CTX.fillStyle = pt.color;
         CTX.globalAlpha = alpha;
         CTX.beginPath();
-        CTX.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
+        CTX.arc(pt.x, pt.y, pt.size || 2.5, 0, Math.PI * 2);
         CTX.fill();
         CTX.globalAlpha = 1.0;
 
         if (pt.life <= 0) particles.splice(i, 1);
       }
 
-      // 7. Draw Floating Combat Texts
+      // 7. Floating Combat Texts
       for (let i = floatingTexts.length - 1; i >= 0; i--) {
         const ft = floatingTexts[i];
         ft.y += ft.vy;
-        ft.alpha -= 0.03;
+        ft.alpha -= 0.028;
 
         CTX.fillStyle = ft.color;
         CTX.globalAlpha = Math.max(0, ft.alpha);
-        CTX.font = "bold 12px 'JetBrains Mono', monospace";
+        CTX.font = "bold 12px 'Orbitron', monospace";
         CTX.textAlign = "center";
         CTX.fillText(ft.text, ft.x, ft.y);
         CTX.globalAlpha = 1.0;
@@ -1671,7 +2069,6 @@
     /* =========================================================================
        GAME LOOP & EVENT LISTENERS
        ========================================================================= */
-
     async function gameLoop() {
       if (!isRunning) return;
 
@@ -1680,7 +2077,6 @@
 
       if (isRunning) {
         if (tickSpeedMs === 0) {
-          // Turbo Mode
           setTimeout(gameLoop, 0);
         } else {
           setTimeout(gameLoop, tickSpeedMs);
@@ -1690,6 +2086,7 @@
 
     // Keyboard Shortcuts
     window.addEventListener("keydown", e => {
+      AudioSys.init();
       if (e.code === "Space") {
         e.preventDefault();
         triggerManualShoot();
